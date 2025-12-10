@@ -60,9 +60,12 @@ export default function Home() {
               >
                 Giriş Yap
               </Link>
-              <button className="px-6 py-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-orange-500/50 transition-all duration-300">
+              <Link 
+                href="/demo"
+                className="px-6 py-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-orange-500/50 transition-all duration-300"
+              >
                 Demo Talep Et
-              </button>
+              </Link>
             </div>
 
             {/* Mobile Menu Button */}
@@ -91,9 +94,9 @@ export default function Home() {
                 <Link href="/login" className="block w-full px-5 py-2 border border-orange-400/50 text-orange-400 rounded-lg font-medium text-center">
                   Giriş Yap
                 </Link>
-                <button className="w-full px-6 py-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-lg font-semibold">
+                <Link href="/demo" className="block w-full px-6 py-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-lg font-semibold text-center">
                   Demo Talep Et
-                </button>
+                </Link>
               </div>
             </div>
           )}
@@ -158,12 +161,15 @@ export default function Home() {
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4">
-                <button className="group px-8 py-4 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-xl font-semibold hover:shadow-2xl hover:shadow-orange-500/50 transition-all duration-300 flex items-center justify-center gap-2">
+                <Link 
+                  href="/demo"
+                  className="group px-8 py-4 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-xl font-semibold hover:shadow-2xl hover:shadow-orange-500/50 transition-all duration-300 flex items-center justify-center gap-2"
+                >
                   Ücretsiz Demo Talep Et
                   <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                   </svg>
-                </button>
+                </Link>
                 <button className="px-8 py-4 glass-effect text-gray-300 rounded-xl font-semibold hover:bg-white/10 transition-all duration-300">
                   Örnek Menülere Göz At
                 </button>
@@ -619,9 +625,12 @@ export default function Home() {
 
                 {/* CTA */}
                 <div className="p-8 pt-0">
-                  <button className="w-full py-4 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-xl font-bold text-lg hover:shadow-2xl hover:shadow-orange-500/50 transition-all duration-300 group-hover:scale-105">
+                  <Link 
+                    href="/demo"
+                    className="block w-full py-4 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-xl font-bold text-lg text-center hover:shadow-2xl hover:shadow-orange-500/50 transition-all duration-300 group-hover:scale-105"
+                  >
                     İşletmenize Özel Fiyat Alın
-                  </button>
+                  </Link>
                   <p className="text-center text-sm text-gray-500 mt-4">
                     💳 Güvenli ödeme • 7 gün para iade garantisi
                   </p>
