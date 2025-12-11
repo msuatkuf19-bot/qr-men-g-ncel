@@ -5,6 +5,12 @@ import { useEffect, useState } from 'react';
 
 // Particle component for background animation
 const Particle = ({ index }: { index: number }) => {
+  const [windowHeight, setWindowHeight] = useState(1000);
+
+  useEffect(() => {
+    setWindowHeight(window.innerHeight);
+  }, []);
+
   const randomX = Math.random() * 100;
   const randomDelay = Math.random() * 5;
   const randomDuration = 15 + Math.random() * 10;
@@ -20,7 +26,7 @@ const Particle = ({ index }: { index: number }) => {
         top: '100%',
       }}
       animate={{
-        y: [0, -window.innerHeight - 100],
+        y: [0, -windowHeight - 100],
         opacity: [0, 1, 0],
       }}
       transition={{
