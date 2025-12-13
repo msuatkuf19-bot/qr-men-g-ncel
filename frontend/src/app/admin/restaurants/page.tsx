@@ -4,6 +4,8 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
+import QrBox from '@/components/QrBox';
+import { slugifyTR } from '@/utils/slugify';
 
 interface Restaurant {
   id: string;
@@ -29,6 +31,18 @@ export default function AdminRestaurants() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(null);
+  const [slugTouched, setSlugTouched] = useState(false);
+  const [slugPreview, setSlugPreview] = useState('');
+  const [slugCheck, setSlugCheck] = useState<
+    | null
+    | {
+        loading: boolean;
+        normalized: string;
+        available?: boolean;
+        suggestion?: string | null;
+        error?: string;
+      }
+  >(null);
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
@@ -45,6 +59,58 @@ export default function AdminRestaurants() {
     loadRestaurants();
   }, []);
 
+  useEffect(() => {
+    if (!showModal) return;
+    const normalized = slugifyTR(formData.slug);
+    setSlugPreview(normalized);
+
+    if (!normalized) {
+      setSlugCheck(null);
+      return;
+    }
+
+    let cancelled = false;
+    setSlugCheck({ loading: true, normalized });
+
+    const t = setTimeout(async () => {
+      try {
+        const url = new URL('/api/slug-check', window.location.origin);
+        url.searchParams.set('slug', normalized);
+        if (editingRestaurant?.id) url.searchParams.set('excludeId', editingRestaurant.id);
+        const res = await fetch(url.toString(), { cache: 'no-store' });
+        const json = await res.json().catch(() => null);
+
+        if (cancelled) return;
+
+        if (!json?.success) {
+          setSlugCheck({ loading: false, normalized, error: json?.message || 'Kontrol edilemedi' });
+          return;
+        }
+
+        setSlugCheck({
+          loading: false,
+          normalized: json.data?.slug || normalized,
+          available: Boolean(json.data?.available),
+          suggestion: json.data?.suggestion ?? null,
+        });
+      } catch (e) {
+        if (cancelled) return;
+        setSlugCheck({ loading: false, normalized, error: 'Kontrol edilemedi' });
+      }
+    }, 350);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [formData.slug, showModal, editingRestaurant?.id]);
+
+  const getClientBaseUrl = () => {
+    const envBase = process.env.NEXT_PUBLIC_BASE_URL;
+    if (envBase && envBase.trim()) return envBase.trim().replace(/\/$/, '');
+    return window.location.origin;
+  };
+
   const loadRestaurants = async () => {
     try {
       setLoading(true);
@@ -60,10 +126,21 @@ export default function AdminRestaurants() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const normalizedSlug = slugifyTR(formData.slug);
+      if (!normalizedSlug) {
+        alert('Slug geçersiz');
+        return;
+      }
+
+      if (slugCheck && slugCheck.normalized === normalizedSlug && slugCheck.available === false) {
+        alert('Bu slug zaten kullanılıyor. Lütfen farklı bir slug seçin.');
+        return;
+      }
+
       if (editingRestaurant) {
-        await apiClient.updateRestaurant(editingRestaurant.id, formData);
+        await apiClient.updateRestaurant(editingRestaurant.id, { ...formData, slug: normalizedSlug });
       } else {
-        await apiClient.createRestaurant(formData);
+        await apiClient.createRestaurant({ ...formData, slug: normalizedSlug });
       }
       setShowModal(false);
       resetForm();
@@ -85,6 +162,8 @@ export default function AdminRestaurants() {
 
   const openEditModal = (restaurant: Restaurant) => {
     setEditingRestaurant(restaurant);
+    setSlugTouched(true);
+    setSlugPreview(restaurant.slug);
     setFormData({
       name: restaurant.name,
       slug: restaurant.slug,
@@ -101,6 +180,9 @@ export default function AdminRestaurants() {
 
   const resetForm = () => {
     setEditingRestaurant(null);
+    setSlugTouched(false);
+    setSlugPreview('');
+    setSlugCheck(null);
     setFormData({
       name: '',
       slug: '',
@@ -284,7 +366,16 @@ export default function AdminRestaurants() {
                         type="text"
                         required
                         value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        onChange={(e) => {
+                          const name = e.target.value;
+                          setFormData((prev) => {
+                            const next = { ...prev, name };
+                            if (!slugTouched) {
+                              next.slug = slugifyTR(name);
+                            }
+                            return next;
+                          });
+                        }}
                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
@@ -296,11 +387,62 @@ export default function AdminRestaurants() {
                         type="text"
                         required
                         value={formData.slug}
-                        onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                        onChange={(e) => {
+                          setSlugTouched(true);
+                          const normalized = slugifyTR(e.target.value);
+                          setSlugPreview(normalized);
+                          setFormData({ ...formData, slug: normalized });
+                        }}
                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                       />
+                      <div className="mt-2 text-xs text-gray-600">
+                        <div>
+                          Menü linki: <span className="font-mono">/m/{slugPreview || '...'}</span>
+                        </div>
+                        {slugCheck?.loading ? (
+                          <div className="text-gray-500 mt-1">Kontrol ediliyor...</div>
+                        ) : slugCheck?.error ? (
+                          <div className="text-red-600 mt-1">{slugCheck.error}</div>
+                        ) : slugCheck?.available === true ? (
+                          <div className="text-green-700 mt-1">Slug uygun</div>
+                        ) : slugCheck?.available === false ? (
+                          <div className="text-red-700 mt-1">
+                            Slug kullanımda
+                            {slugCheck.suggestion ? (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setFormData({ ...formData, slug: slugCheck.suggestion || formData.slug });
+                                  setSlugPreview(slugCheck.suggestion || slugPreview);
+                                }}
+                                className="ml-2 underline text-blue-600"
+                              >
+                                Öneri: {slugCheck.suggestion}
+                              </button>
+                            ) : null}
+                          </div>
+                        ) : null}
+                      </div>
                     </div>
                   </div>
+
+                  {slugPreview ? (
+                    <div className="pt-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">QR Kod</label>
+                      <div className="flex flex-col gap-3">
+                        <QrBox slug={slugPreview} size={240} />
+                        <a
+                          href={`/api/qr?text=${encodeURIComponent(`${getClientBaseUrl()}/m/${slugPreview}`)}`}
+                          download={`qr-${slugPreview}.png`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center justify-center px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-black text-sm font-medium"
+                        >
+                          QR PNG indir (512px)
+                        </a>
+                      </div>
+                    </div>
+                  ) : null}
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Açıklama</label>

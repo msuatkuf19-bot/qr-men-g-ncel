@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import prisma from '../config/database';
 import { ApiError, sendSuccess } from '../utils/response';
+import { slugifyTR } from '../utils/slugify';
 
 // Müşteri menü görüntüleme
 export const getPublicMenu = async (
@@ -133,6 +134,63 @@ export const getProductDetail = async (
     });
 
     sendSuccess(res, product);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const checkSlugAvailability = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const slugRaw = String(req.query.slug ?? '').trim();
+    const excludeId = String(req.query.excludeId ?? '').trim();
+
+    const normalized = slugifyTR(slugRaw);
+    if (!normalized) {
+      throw new ApiError(400, 'Geçersiz slug');
+    }
+
+    const existing = await prisma.restaurant.findFirst({
+      where: {
+        slug: normalized,
+        ...(excludeId ? { id: { not: excludeId } } : {}),
+      },
+      select: { id: true },
+    });
+
+    if (!existing) {
+      return sendSuccess(res, {
+        slug: normalized,
+        available: true,
+      });
+    }
+
+    // Suggest a unique variant (slug-2, slug-3, ...) with a sane upper bound
+    let suggestion: string | null = null;
+    for (let i = 2; i <= 50; i++) {
+      const candidate = `${normalized}-${i}`;
+      // eslint-disable-next-line no-await-in-loop
+      const hit = await prisma.restaurant.findFirst({
+        where: {
+          slug: candidate,
+          ...(excludeId ? { id: { not: excludeId } } : {}),
+        },
+        select: { id: true },
+      });
+      if (!hit) {
+        suggestion = candidate;
+        break;
+      }
+    }
+
+    return sendSuccess(res, {
+      slug: normalized,
+      available: false,
+      suggestion,
+    });
   } catch (error) {
     next(error);
   }
