@@ -247,44 +247,44 @@ export default function Home() {
                           
                           {/* QR Scan Button - Hero Element with 50% Overflow */}
                           <div className="relative h-24 rounded-2xl" style={{overflow: 'visible'}}>
-                            {/* QR Float Wrapper - 50% outside phone frame */}
+                            {/* QR Float Wrapper - Responsive overflow */}
                             <div 
-                              className="qr-float-wrapper absolute -bottom-28 -right-28 md:-bottom-32 md:-right-32 z-30 group cursor-pointer"
+                              className="qr-float-wrapper absolute -bottom-16 -right-12 sm:-bottom-20 sm:-right-16 md:-bottom-28 md:-right-24 lg:-bottom-32 lg:-right-28 z-30 group cursor-pointer"
                               style={{overflow: 'visible'}}
                             >
                               {/* Multi-layer Ambient Glow */}
-                              <div className="absolute -inset-4 w-56 h-56 md:w-64 md:h-64 bg-gradient-to-br from-orange-500/50 via-pink-500/40 to-purple-500/30 rounded-[2.5rem] blur-3xl opacity-70 group-hover:opacity-90 transition-opacity duration-500 animate-pulse"></div>
-                              <div className="absolute -inset-2 w-52 h-52 md:w-60 md:h-60 bg-gradient-to-tr from-orange-400/30 to-pink-500/20 rounded-[2rem] blur-2xl opacity-50 animate-pulse" style={{animationDelay: '0.5s'}}></div>
+                              <div className="absolute -inset-2 sm:-inset-3 md:-inset-4 w-36 h-36 sm:w-44 sm:h-44 md:w-56 md:h-56 lg:w-64 lg:h-64 bg-gradient-to-br from-orange-500/50 via-pink-500/40 to-purple-500/30 rounded-[1.5rem] sm:rounded-[2rem] md:rounded-[2.5rem] blur-2xl md:blur-3xl opacity-70 group-hover:opacity-90 transition-opacity duration-500 animate-pulse"></div>
+                              <div className="absolute -inset-1 sm:-inset-2 w-32 h-32 sm:w-40 sm:h-40 md:w-52 md:h-52 lg:w-60 lg:h-60 bg-gradient-to-tr from-orange-400/30 to-pink-500/20 rounded-[1.25rem] sm:rounded-[1.5rem] md:rounded-[2rem] blur-xl md:blur-2xl opacity-50 animate-pulse" style={{animationDelay: '0.5s'}}></div>
                               
-                              {/* QR Card Container - 40% larger than other cards */}
+                              {/* QR Card Container - Responsive sizing */}
                               <div 
-                                className="relative w-48 h-48 md:w-56 md:h-56 rounded-[1.75rem] bg-gradient-to-br from-[#1a1a2e] via-[#1f1f35] to-[#0f0f1e] border-2 border-orange-500/30 animate-slideUp group-hover:-translate-y-3 group-hover:scale-[1.04] transition-all duration-500 ease-out"
+                                className="relative w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 rounded-[1.25rem] sm:rounded-[1.5rem] md:rounded-[1.75rem] bg-gradient-to-br from-[#1a1a2e] via-[#1f1f35] to-[#0f0f1e] border-2 border-orange-500/30 animate-slideUp group-hover:-translate-y-2 md:group-hover:-translate-y-3 group-hover:scale-[1.04] transition-all duration-500 ease-out"
                                 style={{
                                   animationDelay: '0.75s',
                                   boxShadow: '0 30px 60px -15px rgba(249, 115, 22, 0.35), 0 20px 40px -10px rgba(0, 0, 0, 0.5), 0 0 80px -20px rgba(249, 115, 22, 0.4), 0 0 0 1px rgba(249, 115, 22, 0.15), inset 0 1px 0 rgba(255,255,255,0.08)'
                                 }}
                               >
                                 {/* Inner Gradient Overlay */}
-                                <div className="absolute inset-0 rounded-[1.75rem] bg-gradient-to-t from-orange-500/8 via-transparent to-white/5 pointer-events-none"></div>
+                                <div className="absolute inset-0 rounded-[1.25rem] sm:rounded-[1.5rem] md:rounded-[1.75rem] bg-gradient-to-t from-orange-500/8 via-transparent to-white/5 pointer-events-none"></div>
                                 
                                 {/* Shimmer Effect on Hover */}
-                                <div className="absolute inset-0 rounded-[1.75rem] opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none overflow-hidden">
+                                <div className="absolute inset-0 rounded-[1.25rem] sm:rounded-[1.5rem] md:rounded-[1.75rem] opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none overflow-hidden">
                                   <div className="absolute -inset-full bg-gradient-to-r from-transparent via-white/8 to-transparent skew-x-12 group-hover:animate-shimmer"></div>
                                 </div>
                                 
                                 {/* Pulsing Ring Effect */}
-                                <div className="absolute inset-0 rounded-[1.75rem] border-2 border-orange-500/20 animate-ping opacity-30 pointer-events-none" style={{animationDuration: '2s'}}></div>
+                                <div className="absolute inset-0 rounded-[1.25rem] sm:rounded-[1.5rem] md:rounded-[1.75rem] border-2 border-orange-500/20 animate-ping opacity-30 pointer-events-none" style={{animationDuration: '2s'}}></div>
                                 
                                 {/* QR Content */}
-                                <div className="relative h-full flex flex-col items-center justify-center p-5">
+                                <div className="relative h-full flex flex-col items-center justify-center p-3 sm:p-4 md:p-5">
                                   {/* QR Icon with Premium Styling */}
                                   <div className="relative">
                                     {/* Icon Glow */}
-                                    <div className="absolute -inset-4 w-28 h-28 md:w-32 md:h-32 bg-orange-500/25 rounded-3xl blur-2xl opacity-70 group-hover:opacity-100 transition-opacity"></div>
+                                    <div className="absolute -inset-2 sm:-inset-3 md:-inset-4 w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 lg:w-32 lg:h-32 bg-orange-500/25 rounded-2xl md:rounded-3xl blur-xl md:blur-2xl opacity-70 group-hover:opacity-100 transition-opacity"></div>
                                     
-                                    {/* QR Icon - Larger */}
+                                    {/* QR Icon - Responsive */}
                                     <svg 
-                                      className="relative w-24 h-24 md:w-28 md:h-28 text-white drop-shadow-[0_6px_16px_rgba(249,115,22,0.4)] group-hover:drop-shadow-[0_10px_24px_rgba(249,115,22,0.5)] transition-all duration-300" 
+                                      className="relative w-14 h-14 sm:w-18 sm:h-18 md:w-24 md:h-24 lg:w-28 lg:h-28 text-white drop-shadow-[0_4px_12px_rgba(249,115,22,0.4)] md:drop-shadow-[0_6px_16px_rgba(249,115,22,0.4)] group-hover:drop-shadow-[0_8px_20px_rgba(249,115,22,0.5)] md:group-hover:drop-shadow-[0_10px_24px_rgba(249,115,22,0.5)] transition-all duration-300" 
                                       fill="currentColor" 
                                       viewBox="0 0 24 24"
                                     >
@@ -292,17 +292,17 @@ export default function Home() {
                                     </svg>
                                   </div>
                                   
-                                  {/* Label with Gradient - Larger */}
-                                  <p className="mt-3 text-sm md:text-base font-bold bg-gradient-to-r from-white via-orange-200 to-white bg-clip-text text-transparent tracking-wide">
+                                  {/* Label with Gradient - Responsive */}
+                                  <p className="mt-2 sm:mt-2.5 md:mt-3 text-[10px] sm:text-xs md:text-sm lg:text-base font-bold bg-gradient-to-r from-white via-orange-200 to-white bg-clip-text text-transparent tracking-wide">
                                     Masanızı Tarayın
                                   </p>
                                 </div>
                                 
-                                {/* Corner Accent - Larger */}
-                                <div className="absolute top-4 right-4 w-3 h-3 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 animate-pulse shadow-lg shadow-orange-500/60"></div>
+                                {/* Corner Accent */}
+                                <div className="absolute top-2 right-2 sm:top-3 sm:right-3 md:top-4 md:right-4 w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 animate-pulse shadow-lg shadow-orange-500/60"></div>
                                 
                                 {/* Bottom Accent Line */}
-                                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-16 h-1 rounded-full bg-gradient-to-r from-orange-500/50 via-pink-500/50 to-orange-500/50 opacity-60"></div>
+                                <div className="absolute bottom-2 sm:bottom-3 md:bottom-4 left-1/2 -translate-x-1/2 w-10 sm:w-12 md:w-16 h-0.5 sm:h-0.5 md:h-1 rounded-full bg-gradient-to-r from-orange-500/50 via-pink-500/50 to-orange-500/50 opacity-60"></div>
                               </div>
                             </div>
                           </div>
