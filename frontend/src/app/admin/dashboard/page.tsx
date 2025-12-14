@@ -149,76 +149,76 @@ export default function AdminDashboard() {
 
             {/* Stats Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
-              <div className="group relative overflow-hidden bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/70 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ease-out cursor-default before:content-[''] before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-[#2563EB] before:opacity-70 before:rounded-l-2xl group-hover:before:opacity-90">
+              <div className="group relative overflow-hidden bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/70 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ease-out cursor-default before:content-[''] before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-[#1D4ED8] before:opacity-75 before:rounded-l-2xl group-hover:before:opacity-100">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <div className="text-[12px] sm:text-[13px] font-semibold uppercase tracking-[0.02em] text-slate-500">
+                    <div className="text-[12px] sm:text-[13px] font-semibold uppercase tracking-[0.02em] text-[rgba(29,78,216,0.82)]">
                       Toplam Restoran
                     </div>
-                    <div className="mt-2 text-[28px] sm:text-[32px] leading-none font-bold tabular-nums text-[#1D4ED8]">
+                    <div className="mt-2 text-[28px] sm:text-[32px] leading-none font-bold tabular-nums text-[#1E40AF]">
                       {stats.restaurants}
                     </div>
-                    <div className="mt-2 text-[12px] sm:text-[13px] text-slate-500">
+                    <div className="mt-2 text-[12px] sm:text-[13px] text-[rgba(30,64,175,0.70)]">
                       {stats.activeRestaurants} aktif
                     </div>
                   </div>
 
-                  <div className="shrink-0 h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-[rgba(37,99,235,0.12)] ring-1 ring-inset ring-[rgba(37,99,235,0.18)] flex items-center justify-center transition-colors duration-200 group-hover:bg-[rgba(37,99,235,0.18)]">
-                    <Store className="h-6 w-6 lg:h-7 lg:w-7 text-[#2563EB]" strokeWidth={1.9} aria-hidden="true" />
+                  <div className="shrink-0 h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-[rgba(29,78,216,0.18)] ring-1 ring-inset ring-[rgba(29,78,216,0.22)] flex items-center justify-center transition-colors duration-200 group-hover:bg-[rgba(29,78,216,0.24)]">
+                    <Store className="h-6 w-6 lg:h-7 lg:w-7 text-[#1D4ED8]" strokeWidth={1.9} aria-hidden="true" />
                   </div>
                 </div>
               </div>
 
-              <div className="group relative overflow-hidden bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/70 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ease-out cursor-default before:content-[''] before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-[#6366F1] before:opacity-70 before:rounded-l-2xl group-hover:before:opacity-90">
+              <div className="group relative overflow-hidden bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/70 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ease-out cursor-default before:content-[''] before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-[#4F46E5] before:opacity-75 before:rounded-l-2xl group-hover:before:opacity-100">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <div className="text-[12px] sm:text-[13px] font-semibold uppercase tracking-[0.02em] text-slate-500">
+                    <div className="text-[12px] sm:text-[13px] font-semibold uppercase tracking-[0.02em] text-[rgba(79,70,229,0.82)]">
                       Toplam Kullanıcı
                     </div>
-                    <div className="mt-2 text-[28px] sm:text-[32px] leading-none font-bold tabular-nums text-[#4338CA]">
+                    <div className="mt-2 text-[28px] sm:text-[32px] leading-none font-bold tabular-nums text-[#3730A3]">
                       {stats.users}
                     </div>
-                    <div className="mt-2 text-[12px] sm:text-[13px] text-slate-500">Tüm roller</div>
+                    <div className="mt-2 text-[12px] sm:text-[13px] text-[rgba(55,48,163,0.70)]">Tüm roller</div>
                   </div>
 
-                  <div className="shrink-0 h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-[rgba(99,102,241,0.12)] ring-1 ring-inset ring-[rgba(99,102,241,0.18)] flex items-center justify-center transition-colors duration-200 group-hover:bg-[rgba(99,102,241,0.18)]">
-                    <Users className="h-6 w-6 lg:h-7 lg:w-7 text-[#6366F1]" strokeWidth={1.9} aria-hidden="true" />
+                  <div className="shrink-0 h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-[rgba(79,70,229,0.18)] ring-1 ring-inset ring-[rgba(79,70,229,0.22)] flex items-center justify-center transition-colors duration-200 group-hover:bg-[rgba(79,70,229,0.24)]">
+                    <Users className="h-6 w-6 lg:h-7 lg:w-7 text-[#4F46E5]" strokeWidth={1.9} aria-hidden="true" />
                   </div>
                 </div>
               </div>
 
-              <div className="group relative overflow-hidden bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/70 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ease-out cursor-default before:content-[''] before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-[#9333EA] before:opacity-70 before:rounded-l-2xl group-hover:before:opacity-90">
+              <div className="group relative overflow-hidden bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/70 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ease-out cursor-default before:content-[''] before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-[#7C3AED] before:opacity-75 before:rounded-l-2xl group-hover:before:opacity-100">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <div className="text-[12px] sm:text-[13px] font-semibold uppercase tracking-[0.02em] text-slate-500">
+                    <div className="text-[12px] sm:text-[13px] font-semibold uppercase tracking-[0.02em] text-[rgba(124,58,237,0.82)]">
                       QR Tarama
                     </div>
-                    <div className="mt-2 text-[28px] sm:text-[32px] leading-none font-bold tabular-nums text-[#7E22CE]">
+                    <div className="mt-2 text-[28px] sm:text-[32px] leading-none font-bold tabular-nums text-[#6D28D9]">
                       {stats.qrScans}
                     </div>
-                    <div className="mt-2 text-[12px] sm:text-[13px] text-slate-500">Toplam görüntülenme</div>
+                    <div className="mt-2 text-[12px] sm:text-[13px] text-[rgba(109,40,217,0.70)]">Toplam görüntülenme</div>
                   </div>
 
-                  <div className="shrink-0 h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-[rgba(147,51,234,0.12)] ring-1 ring-inset ring-[rgba(147,51,234,0.18)] flex items-center justify-center transition-colors duration-200 group-hover:bg-[rgba(147,51,234,0.18)]">
-                    <QrCode className="h-6 w-6 lg:h-7 lg:w-7 text-[#9333EA]" strokeWidth={1.9} aria-hidden="true" />
+                  <div className="shrink-0 h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-[rgba(124,58,237,0.20)] ring-1 ring-inset ring-[rgba(124,58,237,0.24)] flex items-center justify-center transition-colors duration-200 group-hover:bg-[rgba(124,58,237,0.27)]">
+                    <QrCode className="h-6 w-6 lg:h-7 lg:w-7 text-[#7C3AED]" strokeWidth={1.9} aria-hidden="true" />
                   </div>
                 </div>
               </div>
 
-              <div className="group relative overflow-hidden bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/70 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ease-out cursor-default before:content-[''] before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-[#F59E0B] before:opacity-70 before:rounded-l-2xl group-hover:before:opacity-90">
+              <div className="group relative overflow-hidden bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/70 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ease-out cursor-default before:content-[''] before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-[#F97316] before:opacity-75 before:rounded-l-2xl group-hover:before:opacity-100">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <div className="text-[12px] sm:text-[13px] font-semibold uppercase tracking-[0.02em] text-slate-500">
+                    <div className="text-[12px] sm:text-[13px] font-semibold uppercase tracking-[0.02em] text-[rgba(249,115,22,0.82)]">
                       Aktif Oran
                     </div>
                     <div className="mt-2 text-[28px] sm:text-[32px] leading-none font-bold tabular-nums text-[#EA580C]">
                       {stats.restaurants > 0 ? Math.round((stats.activeRestaurants / stats.restaurants) * 100) : 0}%
                     </div>
-                    <div className="mt-2 text-[12px] sm:text-[13px] text-slate-500">Menüsü olan</div>
+                    <div className="mt-2 text-[12px] sm:text-[13px] text-[rgba(234,88,12,0.70)]">Menüsü olan</div>
                   </div>
 
-                  <div className="shrink-0 h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-[rgba(245,158,11,0.15)] ring-1 ring-inset ring-[rgba(245,158,11,0.22)] flex items-center justify-center transition-colors duration-200 group-hover:bg-[rgba(245,158,11,0.22)]">
-                    <TrendingUp className="h-6 w-6 lg:h-7 lg:w-7 text-[#F59E0B]" strokeWidth={1.9} aria-hidden="true" />
+                  <div className="shrink-0 h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-[rgba(249,115,22,0.22)] ring-1 ring-inset ring-[rgba(249,115,22,0.26)] flex items-center justify-center transition-colors duration-200 group-hover:bg-[rgba(249,115,22,0.30)]">
+                    <TrendingUp className="h-6 w-6 lg:h-7 lg:w-7 text-[#F97316]" strokeWidth={1.9} aria-hidden="true" />
                   </div>
                 </div>
               </div>
