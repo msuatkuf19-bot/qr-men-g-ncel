@@ -160,19 +160,19 @@ export default function Home() {
               </div>
 
               {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto items-stretch sm:items-center">
+              <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto items-center sm:items-center">
                 <Link 
                   href="/demo"
-                  className="group w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-xl font-semibold hover:shadow-2xl hover:shadow-orange-500/50 transition-all duration-300 flex items-center justify-center gap-2"
+                  className="group relative w-full max-w-md sm:w-auto sm:max-w-none px-8 py-4 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-xl font-semibold hover:shadow-2xl hover:shadow-orange-500/50 transition-all duration-300 flex items-center justify-center"
                 >
-                  Ücretsiz Demo Talep Et
-                  <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <span className="text-center">Ücretsiz Demo Talep Et</span>
+                  <svg className="absolute right-6 w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                   </svg>
                 </Link>
                 <Link 
                   href="/ornek-menuler"
-                  className="w-full sm:w-auto px-8 py-4 glass-effect text-gray-300 rounded-xl font-semibold hover:bg-white/10 transition-all duration-300 flex items-center justify-center"
+                  className="w-full max-w-md sm:w-auto sm:max-w-none px-8 py-4 glass-effect text-gray-300 rounded-xl font-semibold hover:bg-white/10 transition-all duration-300 flex items-center justify-center"
                 >
                   Örnek Menülere Göz At
                 </Link>
