@@ -4,7 +4,7 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
-import { QrCode, Store, TrendingUp, Users } from 'lucide-react';
+import { Crown, QrCode, Store, TrendingUp, Users } from 'lucide-react';
 
 interface DashboardStats {
   restaurants: number;
@@ -79,7 +79,7 @@ export default function AdminDashboard() {
 
   return (
     <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
-      <DashboardLayout title="👑 Süper Admin Dashboard">
+      <DashboardLayout>
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
@@ -89,6 +89,64 @@ export default function AdminDashboard() {
           </div>
         ) : (
           <>
+            {/* Page Header */}
+            <div className="mb-6 sm:mb-8">
+              <div className="flex flex-col gap-4 sm:gap-5">
+                <nav aria-label="Breadcrumb" className="text-[12px] text-slate-500">
+                  <ol className="flex flex-wrap items-center gap-1">
+                    <li>Admin</li>
+                    <li className="text-slate-300">/</li>
+                    <li>Süper Admin</li>
+                    <li className="text-slate-300">/</li>
+                    <li className="text-slate-600">Dashboard</li>
+                  </ol>
+                </nav>
+
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm ring-1 ring-slate-900/10">
+                        <Crown className="h-5 w-5" strokeWidth={1.9} aria-hidden="true" />
+                      </span>
+                      <div className="min-w-0">
+                        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+                          Süper Admin Dashboard
+                        </h1>
+                        <p className="mt-1 text-[13px] sm:text-[14px] text-slate-500">
+                          Sistem genel metrikleri ve son eklenen restoranlar.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex w-full sm:w-auto flex-col sm:flex-row gap-2 sm:gap-3">
+                    <button
+                      type="button"
+                      className="h-11 px-4 rounded-xl border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 transition-colors duration-200 font-semibold text-sm"
+                    >
+                      Rapor İndir
+                    </button>
+                    <button
+                      type="button"
+                      className="h-11 px-4 rounded-xl bg-primary-600 text-white hover:bg-primary-700 transition-colors duration-200 font-semibold text-sm shadow-sm"
+                    >
+                      Yeni Restoran
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 text-slate-700 text-[12px] font-medium ring-1 ring-slate-200/60">
+                    <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />
+                    Sistem: Normal
+                  </span>
+                  <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-slate-100 text-slate-700 text-[12px] font-medium ring-1 ring-slate-200/60">
+                    Son güncelleme: {new Date().toLocaleString('tr-TR', { dateStyle: 'medium', timeStyle: 'short' })}
+                  </span>
+                </div>
+              </div>
+            </div>
+
             {/* Stats Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
               <div className="group bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/70 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ease-out cursor-default">
