@@ -205,14 +205,14 @@ export default function AdminRestaurants() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
               <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-200/70">
-                  <Store className="h-5 w-5" strokeWidth={1.9} aria-hidden="true" />
+                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-900 ring-1 ring-inset ring-amber-300/70 shadow-sm">
+                  <Store className="h-6 w-6" strokeWidth={1.9} aria-hidden="true" />
                 </span>
                 <div className="min-w-0">
-                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+                  <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 leading-tight">
                     Restoran Yönetimi
                   </h1>
-                  <p className="mt-1 text-[13px] sm:text-[14px] text-slate-500">
+                  <p className="mt-1 text-[13px] sm:text-[15px] text-slate-600">
                     Tüm restoranları yönetin, iletişim bilgilerini ve istatistikleri görüntüleyin
                   </p>
                 </div>
@@ -224,7 +224,7 @@ export default function AdminRestaurants() {
                 resetForm();
                 setShowModal(true);
               }}
-              className="w-full sm:w-auto h-11 px-4 sm:px-5 rounded-xl bg-primary-600 text-white hover:bg-primary-700 shadow-sm hover:shadow-md transition-all duration-200 ease-out font-semibold text-sm flex items-center justify-center gap-2"
+              className="w-full sm:w-auto h-12 px-5 sm:px-6 rounded-xl bg-primary-600 text-white hover:bg-primary-700 ring-1 ring-inset ring-primary-500/20 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ease-out font-semibold text-sm flex items-center justify-center gap-2"
             >
               <Plus className="h-4.5 w-4.5" strokeWidth={2} aria-hidden="true" />
               <span>Yeni Restoran</span>
