@@ -19,8 +19,8 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#05070B] via-[#0C111C] to-[#141824]">
       {/* Header/Navbar */}
-      <nav className="fixed w-full top-0 z-50 glass-effect border-b border-white/5">
-        <div className="container mx-auto px-6 py-4">
+      <nav className="fixed w-full top-0 z-50 glass-effect border-b border-white/5 pt-[env(safe-area-inset-top)]">
+        <div className="container mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-4">
@@ -71,7 +71,7 @@ export default function Home() {
             {/* Mobile Menu Button */}
             <button 
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden text-gray-300 hover:text-white"
+              className="lg:hidden shrink-0 p-2 -mr-1 rounded-lg text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 {mobileMenuOpen ? (
@@ -945,12 +945,12 @@ export default function Home() {
             {/* Social */}
             <div>
               <h4 className="text-white font-semibold mb-4">Bizi Takip Edin</h4>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-nowrap gap-2 sm:gap-3 overflow-x-auto">
                 <a 
                   href="https://instagram.com/menuben.tr" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center hover:scale-110 transition-transform"
+                  className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center hover:scale-110 transition-transform shrink-0"
                   title="Instagram"
                 >
                   <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -961,7 +961,7 @@ export default function Home() {
                   href="https://facebook.com/menuben.tr" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center hover:scale-110 transition-transform"
+                  className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center hover:scale-110 transition-transform shrink-0"
                   title="Facebook"
                 >
                   <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -969,10 +969,10 @@ export default function Home() {
                   </svg>
                 </a>
                 <a 
-                  href="https://x.com/menubentr" 
+                  href="https://x.com/menuben" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-lg bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center hover:scale-110 transition-transform"
+                  className="w-10 h-10 rounded-lg bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center hover:scale-110 transition-transform shrink-0"
                   title="X"
                 >
                   <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -983,7 +983,7 @@ export default function Home() {
                   href="https://tiktok.com/@menuben.tr" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-lg bg-gradient-to-br from-gray-900 to-black flex items-center justify-center hover:scale-110 transition-transform"
+                  className="w-10 h-10 rounded-lg bg-gradient-to-br from-gray-900 to-black flex items-center justify-center hover:scale-110 transition-transform shrink-0"
                   title="TikTok"
                 >
                   <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -994,7 +994,7 @@ export default function Home() {
                   href="https://youtube.com/@menubentr" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-lg bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center hover:scale-110 transition-transform"
+                  className="w-10 h-10 rounded-lg bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center hover:scale-110 transition-transform shrink-0"
                   title="YouTube"
                 >
                   <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -1005,7 +1005,7 @@ export default function Home() {
                   href="https://linkedin.com/company/menubentr" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center hover:scale-110 transition-transform"
+                  className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center hover:scale-110 transition-transform shrink-0"
                   title="LinkedIn"
                 >
                   <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -1016,7 +1016,7 @@ export default function Home() {
                   href="https://wa.me/905050806880" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center hover:scale-110 transition-transform"
+                  className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center hover:scale-110 transition-transform shrink-0"
                   title="WhatsApp"
                 >
                   <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
