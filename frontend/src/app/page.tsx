@@ -245,15 +245,57 @@ export default function Home() {
                             </div>
                           ))}
                           
-                          {/* QR Scan Button - Large, overflowing */}
-                          <div className="relative h-24 rounded-2xl overflow-visible">
-                            <div className="absolute -bottom-20 -right-20 w-44 h-44 rounded-3xl bg-gradient-to-br from-gray-800 to-gray-900 border-2 border-orange-500/60 animate-slideUp shadow-2xl shadow-orange-500/40 z-20" style={{animationDelay: '0.75s'}}>
-                              <div className="absolute inset-0 bg-orange-500/10 animate-pulse rounded-3xl"></div>
-                              <div className="relative h-full flex flex-col items-center justify-center">
-                                <svg className="w-24 h-24 text-white mb-2 drop-shadow-xl" fill="currentColor" viewBox="0 0 24 24">
-                                  <path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm4 4H7V7h2v2zm4-6h8v8h-8V3zm2 2v4h4V5h-4zm4 4h-2V7h2v2zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm4 4H7v-2h2v2zm6-6h2v2h-2v-2zm0 4h2v2h-2v-2zm4-4h2v2h-2v-2zm0 4h2v2h-2v-2zm-2-2h2v2h-2v-2z"/>
-                                </svg>
-                                <p className="text-white text-xs font-bold">Masanızı Tarayın</p>
+                          {/* QR Scan Button - Premium Floating Effect */}
+                          <div className="relative h-24 rounded-2xl" style={{overflow: 'visible'}}>
+                            {/* QR Float Wrapper - Awwwards Premium Style */}
+                            <div 
+                              className="qr-float-wrapper absolute -bottom-14 -right-14 md:-bottom-16 md:-right-16 z-30 group cursor-pointer"
+                              style={{overflow: 'visible'}}
+                            >
+                              {/* Ambient Glow - Soft outer radiance */}
+                              <div className="absolute inset-0 w-40 h-40 md:w-44 md:h-44 bg-gradient-to-br from-orange-500/40 via-pink-500/30 to-purple-500/20 rounded-[2rem] blur-2xl opacity-60 group-hover:opacity-80 transition-opacity duration-500 animate-pulse"></div>
+                              
+                              {/* QR Card Container */}
+                              <div 
+                                className="relative w-40 h-40 md:w-44 md:h-44 rounded-[1.5rem] bg-gradient-to-br from-[#1a1a2e] via-[#1f1f35] to-[#0f0f1e] border border-white/10 animate-slideUp group-hover:-translate-y-2 group-hover:scale-[1.03] transition-all duration-500 ease-out"
+                                style={{
+                                  animationDelay: '0.75s',
+                                  boxShadow: '0 25px 50px -12px rgba(249, 115, 22, 0.25), 0 12px 24px -8px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(249, 115, 22, 0.1), inset 0 1px 0 rgba(255,255,255,0.05)'
+                                }}
+                              >
+                                {/* Inner Gradient Overlay */}
+                                <div className="absolute inset-0 rounded-[1.5rem] bg-gradient-to-t from-orange-500/5 via-transparent to-white/5 pointer-events-none"></div>
+                                
+                                {/* Shimmer Effect on Hover */}
+                                <div className="absolute inset-0 rounded-[1.5rem] opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none overflow-hidden">
+                                  <div className="absolute -inset-full bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-12 group-hover:animate-shimmer"></div>
+                                </div>
+                                
+                                {/* QR Content */}
+                                <div className="relative h-full flex flex-col items-center justify-center p-4">
+                                  {/* QR Icon with Premium Styling */}
+                                  <div className="relative">
+                                    {/* Icon Glow */}
+                                    <div className="absolute inset-0 w-20 h-20 md:w-22 md:h-22 bg-orange-500/20 rounded-2xl blur-xl opacity-60 group-hover:opacity-80 transition-opacity"></div>
+                                    
+                                    {/* QR Icon */}
+                                    <svg 
+                                      className="relative w-20 h-20 md:w-22 md:h-22 text-white drop-shadow-[0_4px_12px_rgba(249,115,22,0.3)] group-hover:drop-shadow-[0_8px_20px_rgba(249,115,22,0.4)] transition-all duration-300" 
+                                      fill="currentColor" 
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm4 4H7V7h2v2zm4-6h8v8h-8V3zm2 2v4h4V5h-4zm4 4h-2V7h2v2zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm4 4H7v-2h2v2zm6-6h2v2h-2v-2zm0 4h2v2h-2v-2zm4-4h2v2h-2v-2zm0 4h2v2h-2v-2zm-2-2h2v2h-2v-2z"/>
+                                    </svg>
+                                  </div>
+                                  
+                                  {/* Label with Gradient */}
+                                  <p className="mt-2 text-xs md:text-sm font-bold bg-gradient-to-r from-white via-orange-100 to-white bg-clip-text text-transparent">
+                                    Masanızı Tarayın
+                                  </p>
+                                </div>
+                                
+                                {/* Corner Accent */}
+                                <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 animate-pulse shadow-lg shadow-orange-500/50"></div>
                               </div>
                             </div>
                           </div>
