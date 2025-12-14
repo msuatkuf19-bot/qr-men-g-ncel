@@ -4,6 +4,18 @@ import { useAuthStore } from '@/store/auth.store';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { ReactNode, useState } from 'react';
+import {
+  LayoutDashboard,
+  ClipboardList,
+  Layers,
+  QrCode,
+  Settings,
+  MonitorSmartphone,
+  BarChart3,
+  Store,
+  Users,
+  LineChart,
+} from 'lucide-react';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -29,22 +41,45 @@ export function DashboardLayout({ children, title }: DashboardLayoutProps) {
   // Check if current path matches link
   const isActive = (href: string) => pathname === href;
 
+  const iconClass = (active: boolean) =>
+    active ? 'text-primary-600' : 'text-muted group-hover:text-primary-600';
+
+  const Icon = ({
+    active,
+    children,
+  }: {
+    active: boolean;
+    children: ReactNode;
+  }) => (
+    <span className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors ${active ? 'bg-primary-100/60' : 'bg-transparent group-hover:bg-primary-50/60'}`}>
+      <span className={iconClass(active)}>{children}</span>
+    </span>
+  );
+
   // Sidebar link component for consistent styling
-  const SidebarLink = ({ href, icon, label }: { href: string; icon: string; label: string }) => (
+  const SidebarLink = ({ href, icon, label }: { href: string; icon: ReactNode; label: string }) => (
+    (() => {
+      const active = isActive(href);
+      return (
     <Link
       href={href}
       onClick={closeSidebar}
       className={`
-        relative flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200
-        ${isActive(href)
-          ? 'bg-primary-50 text-primary-600 before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1 before:h-8 before:bg-primary-500 before:rounded-r-full'
-          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+        group relative flex items-center gap-3 h-11 px-3 rounded-xl text-[14px] leading-none transition-all duration-200 ease-out
+        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/30 focus-visible:ring-offset-2 focus-visible:ring-offset-white
+        ${active
+          ? 'bg-primary-50/70 text-gray-900 font-semibold before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1 before:h-7 before:bg-primary-500 before:rounded-r-full'
+          : 'text-muted hover:bg-primary-50/40 hover:text-gray-900'
         }
       `}
     >
-      <span className="text-xl w-6 text-center">{icon}</span>
-      <span>{label}</span>
+      <Icon active={active}>
+        {icon}
+      </Icon>
+      <span className="truncate">{label}</span>
     </Link>
+      );
+    })()
   );
 
   return (
@@ -122,38 +157,82 @@ export function DashboardLayout({ children, title }: DashboardLayoutProps) {
         ${sidebarOpen ? 'translate-x-0 shadow-soft-lg' : '-translate-x-full'}
         lg:translate-x-0 lg:shadow-none
       `}>
-        <nav className="p-4 space-y-1 overflow-y-auto h-full">
+        <nav className="px-3 py-4 space-y-1 overflow-y-auto h-full">
           {/* Section Label */}
-          <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+          <div className="px-3 pt-2 pb-3 text-[11px] font-semibold text-gray-400 uppercase tracking-[0.14em]">
             {isSuperAdmin ? 'Yönetim' : 'Menü Yönetimi'}
           </div>
 
           {isSuperAdmin && (
             <>
-              <SidebarLink href="/admin/dashboard" icon="📊" label="Dashboard" />
-              <SidebarLink href="/admin/restaurants" icon="🏪" label="Restoranlar" />
-              <SidebarLink href="/admin/users" icon="👥" label="Kullanıcılar" />
-              <SidebarLink href="/admin/analytics" icon="📈" label="Analitik" />
+              <SidebarLink
+                href="/admin/dashboard"
+                icon={<LayoutDashboard size={20} strokeWidth={2} />}
+                label="Dashboard"
+              />
+              <SidebarLink
+                href="/admin/restaurants"
+                icon={<Store size={20} strokeWidth={2} />}
+                label="Restoranlar"
+              />
+              <SidebarLink
+                href="/admin/users"
+                icon={<Users size={20} strokeWidth={2} />}
+                label="Kullanıcılar"
+              />
+              <SidebarLink
+                href="/admin/analytics"
+                icon={<LineChart size={20} strokeWidth={2} />}
+                label="Analitik"
+              />
             </>
           )}
 
           {isRestaurantAdmin && (
             <>
-              <SidebarLink href="/restaurant/dashboard" icon="📊" label="Dashboard" />
-              <SidebarLink href="/restaurant/menu" icon="📋" label="Menü Yönetimi" />
-              <SidebarLink href="/restaurant/categories" icon="📁" label="Kategoriler" />
-              <SidebarLink href="/restaurant/qr-codes" icon="🎯" label="QR Kodlar" />
+              <SidebarLink
+                href="/restaurant/dashboard"
+                icon={<LayoutDashboard size={20} strokeWidth={2} />}
+                label="Dashboard"
+              />
+              <SidebarLink
+                href="/restaurant/menu"
+                icon={<ClipboardList size={20} strokeWidth={2} />}
+                label="Menü Yönetimi"
+              />
+              <SidebarLink
+                href="/restaurant/categories"
+                icon={<Layers size={20} strokeWidth={2} />}
+                label="Kategoriler"
+              />
+              <SidebarLink
+                href="/restaurant/qr-codes"
+                icon={<QrCode size={20} strokeWidth={2} />}
+                label="QR Kodlar"
+              />
               
-              <div className="pt-4 pb-2 px-4">
-                <div className="border-t border-gray-100"></div>
+              <div className="pt-5 pb-3 px-3">
+                <div className="border-t border-gray-100/80"></div>
               </div>
-              <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              <div className="px-3 py-2 text-[11px] font-semibold text-gray-400 uppercase tracking-[0.14em]">
                 Ayarlar
               </div>
               
-              <SidebarLink href="/restaurant/settings" icon="⚙️" label="Restoran Ayarları" />
-              <SidebarLink href="/restaurant/menu-appearance" icon="🎨" label="Menü Görünümü" />
-              <SidebarLink href="/restaurant/analytics" icon="📈" label="İstatistikler" />
+              <SidebarLink
+                href="/restaurant/settings"
+                icon={<Settings size={20} strokeWidth={2} />}
+                label="Restoran Ayarları"
+              />
+              <SidebarLink
+                href="/restaurant/menu-appearance"
+                icon={<MonitorSmartphone size={20} strokeWidth={2} />}
+                label="Menü Görünümü"
+              />
+              <SidebarLink
+                href="/restaurant/analytics"
+                icon={<BarChart3 size={20} strokeWidth={2} />}
+                label="İstatistikler"
+              />
             </>
           )}
         </nav>
