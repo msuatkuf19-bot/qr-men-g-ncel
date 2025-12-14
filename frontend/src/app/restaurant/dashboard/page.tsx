@@ -36,6 +36,100 @@ interface Product {
   isAvailable: boolean;
 }
 
+// Skeleton component for loading states
+const Skeleton = ({ className = '' }: { className?: string }) => (
+  <div className={`animate-pulse bg-gray-200 rounded-lg ${className}`} />
+);
+
+// Stat card component for consistent styling
+const StatCard = ({ 
+  title, 
+  value, 
+  subtitle, 
+  icon, 
+  color, 
+  loading = false,
+  emptyHint 
+}: { 
+  title: string; 
+  value: number; 
+  subtitle: string; 
+  icon: React.ReactNode;
+  color: 'blue' | 'green' | 'purple' | 'orange';
+  loading?: boolean;
+  emptyHint?: string;
+}) => {
+  const colorClasses = {
+    blue: 'text-primary-600 bg-primary-50',
+    green: 'text-emerald-600 bg-emerald-50',
+    purple: 'text-violet-600 bg-violet-50',
+    orange: 'text-orange-600 bg-orange-50',
+  };
+
+  return (
+    <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-soft border border-gray-100 hover:shadow-soft-lg hover:-translate-y-0.5 transition-all duration-200">
+      <div className="flex items-start justify-between mb-4">
+        <h3 className="text-sm font-medium text-gray-500">{title}</h3>
+        <div className={`w-10 h-10 rounded-xl ${colorClasses[color]} flex items-center justify-center`}>
+          {icon}
+        </div>
+      </div>
+      {loading ? (
+        <Skeleton className="h-9 w-20 mb-2" />
+      ) : (
+        <p className={`text-3xl sm:text-4xl font-bold ${colorClasses[color].split(' ')[0]} mb-1`}>
+          {value}
+        </p>
+      )}
+      <p className="text-xs text-gray-400">{subtitle}</p>
+      {!loading && value === 0 && emptyHint && (
+        <p className="text-xs text-primary-500 mt-2 font-medium">{emptyHint}</p>
+      )}
+    </div>
+  );
+};
+
+// Action card component
+const ActionCard = ({
+  href,
+  icon,
+  title,
+  description,
+  hoverColor,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  hoverColor: 'blue' | 'green' | 'purple';
+}) => {
+  const hoverClasses = {
+    blue: 'hover:border-primary-400 hover:shadow-glow-primary',
+    green: 'hover:border-emerald-400',
+    purple: 'hover:border-violet-400',
+  };
+
+  return (
+    <a
+      href={href}
+      className={`group relative bg-white p-6 rounded-2xl shadow-soft border-2 border-gray-100 ${hoverClasses[hoverColor]} transition-all duration-200 flex items-start gap-4 hover:-translate-y-0.5`}
+    >
+      <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gray-50 group-hover:bg-primary-50 flex items-center justify-center transition-colors">
+        {icon}
+      </div>
+      <div className="flex-1 min-w-0">
+        <h3 className="text-base font-semibold text-gray-900 group-hover:text-primary-600 transition-colors mb-1">
+          {title}
+        </h3>
+        <p className="text-sm text-gray-500">{description}</p>
+      </div>
+      <svg className="w-5 h-5 text-gray-300 group-hover:text-primary-500 group-hover:translate-x-0.5 transition-all flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+      </svg>
+    </a>
+  );
+};
+
 export default function RestaurantDashboard() {
   const [stats, setStats] = useState<DashboardStats>({
     categories: 0,
@@ -107,132 +201,207 @@ export default function RestaurantDashboard() {
     }
   };
 
+  const copyMenuLink = () => {
+    if (restaurant?.slug) {
+      const menuUrl = `${window.location.origin}/m/${restaurant.slug}`;
+      navigator.clipboard.writeText(menuUrl);
+      // Could add a toast notification here
+    }
+  };
+
   return (
     <ProtectedRoute allowedRoles={['RESTAURANT_ADMIN']}>
       <DashboardLayout title="🏪 Restoran Yönetim Paneli">
         {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Yükleniyor...</p>
+          // Loading skeleton
+          <div className="space-y-6">
+            <Skeleton className="h-40 w-full rounded-2xl" />
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {[...Array(4)].map((_, i) => (
+                <Skeleton key={i} className="h-32 rounded-2xl" />
+              ))}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {[...Array(3)].map((_, i) => (
+                <Skeleton key={i} className="h-28 rounded-2xl" />
+              ))}
             </div>
           </div>
         ) : (
           <>
-            {/* Restaurant Info */}
+            {/* Restaurant Hero Card - Premium Style */}
             {restaurant && (
-              <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl p-4 sm:p-6 mb-6 sm:mb-8 shadow-lg">
-                <h2 className="text-xl sm:text-2xl font-bold mb-2">{restaurant.name}</h2>
-                <p className="text-blue-100 mb-3 text-sm sm:text-base">{restaurant.description || 'Restoranınızın açıklaması'}</p>
-                <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
-                  <span className="px-3 py-1 bg-white/20 rounded-full">/{restaurant.slug}</span>
-                  <span className="px-3 py-1 bg-white/20 rounded-full">Menü Linki</span>
+              <div className="relative overflow-hidden bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 text-white rounded-2xl p-6 sm:p-8 mb-8 shadow-soft-lg">
+                {/* Background Pattern */}
+                <div className="absolute inset-0 opacity-10">
+                  <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <defs>
+                      <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+                        <path d="M 10 0 L 0 0 0 10" fill="none" stroke="white" strokeWidth="0.5"/>
+                      </pattern>
+                    </defs>
+                    <rect width="100" height="100" fill="url(#grid)" />
+                  </svg>
+                </div>
+                
+                <div className="relative">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                    <div>
+                      <h2 className="text-2xl sm:text-3xl font-bold mb-2">{restaurant.name}</h2>
+                      <p className="text-primary-100 mb-4 text-sm sm:text-base max-w-lg">
+                        {restaurant.description || 'Restoranınızın açıklamasını ayarlardan ekleyebilirsiniz'}
+                      </p>
+                      
+                      {/* Quick Stats Chips */}
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-lg text-sm font-medium">
+                          <span className="text-primary-200">📁</span> {stats.categories} Kategori
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-lg text-sm font-medium">
+                          <span className="text-primary-200">🍽️</span> {stats.products} Ürün
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-lg text-sm font-medium">
+                          <span className="text-primary-200">🎯</span> {stats.qrCodes} QR Kod
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* Menu Link Actions */}
+                    <div className="flex flex-col gap-2">
+                      <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-xl text-sm">
+                        <span className="text-primary-200">🔗</span>
+                        <span className="font-mono">/{restaurant.slug}</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={copyMenuLink}
+                          className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-primary-600 rounded-xl text-sm font-semibold hover:bg-primary-50 transition-colors shadow-soft"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                          Kopyala
+                        </button>
+                        <a
+                          href={`/m/${restaurant.slug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white/20 backdrop-blur-sm text-white rounded-xl text-sm font-semibold hover:bg-white/30 transition-colors"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                          Menüyü Gör
+                        </a>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
-              <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100">
-                <div className="flex items-center justify-between mb-2 sm:mb-4">
-                  <h3 className="text-xs sm:text-sm font-medium text-gray-600">Kategoriler</h3>
-                  <span className="text-xl sm:text-3xl">📁</span>
-                </div>
-                <p className="text-xl sm:text-3xl font-bold text-blue-600">{stats.categories}</p>
-                <p className="text-xs text-gray-500 mt-1 sm:mt-2">Aktif kategoriler</p>
-              </div>
-
-              <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100">
-                <div className="flex items-center justify-between mb-2 sm:mb-4">
-                  <h3 className="text-xs sm:text-sm font-medium text-gray-600">Ürünler</h3>
-                  <span className="text-xl sm:text-3xl">🍽️</span>
-                </div>
-                <p className="text-xl sm:text-3xl font-bold text-green-600">{stats.products}</p>
-                <p className="text-xs text-gray-500 mt-1 sm:mt-2">Toplam ürün</p>
-              </div>
-
-              <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100">
-                <div className="flex items-center justify-between mb-2 sm:mb-4">
-                  <h3 className="text-xs sm:text-sm font-medium text-gray-600">QR Kodlar</h3>
-                  <span className="text-xl sm:text-3xl">🎯</span>
-                </div>
-                <p className="text-xl sm:text-3xl font-bold text-purple-600">{stats.qrCodes}</p>
-                <p className="text-xs text-gray-500 mt-1 sm:mt-2">Aktif QR kodlar</p>
-              </div>
-
-              <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100">
-                <div className="flex items-center justify-between mb-2 sm:mb-4">
-                  <h3 className="text-xs sm:text-sm font-medium text-gray-600">Görüntülenme</h3>
-                  <span className="text-xl sm:text-3xl">👁️</span>
-                </div>
-                <p className="text-xl sm:text-3xl font-bold text-orange-600">{stats.views}</p>
-                <p className="text-xs text-gray-500 mt-1 sm:mt-2">Toplam erişim</p>
-              </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+              <StatCard
+                title="Kategoriler"
+                value={stats.categories}
+                subtitle="Aktif kategoriler"
+                icon={<svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>}
+                color="blue"
+                loading={loading}
+                emptyHint="İlk kategorini ekleyerek başla →"
+              />
+              <StatCard
+                title="Ürünler"
+                value={stats.products}
+                subtitle="Toplam ürün"
+                icon={<svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8.1 13.34l2.83-2.83L3.91 3.5c-1.56 1.56-1.56 4.09 0 5.66l4.19 4.18zm6.78-1.81c1.53.71 3.68.21 5.27-1.38 1.91-1.91 2.28-4.65.81-6.12-1.46-1.46-4.2-1.1-6.12.81-1.59 1.59-2.09 3.74-1.38 5.27L3.7 19.87l1.41 1.41L12 14.41l6.88 6.88 1.41-1.41L13.41 13l1.47-1.47z"/></svg>}
+                color="green"
+                loading={loading}
+                emptyHint="Menüne ürün ekle →"
+              />
+              <StatCard
+                title="QR Kodlar"
+                value={stats.qrCodes}
+                subtitle="Aktif QR kodlar"
+                icon={<svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm4 4H7V7h2v2zm4-6h8v8h-8V3zm2 2v4h4V5h-4zm4 4h-2V7h2v2zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm4 4H7v-2h2v2zm6-6h2v2h-2v-2zm0 4h2v2h-2v-2zm4-4h2v2h-2v-2zm0 4h2v2h-2v-2zm-2-2h2v2h-2v-2z"/></svg>}
+                color="purple"
+                loading={loading}
+                emptyHint="QR kod oluştur →"
+              />
+              <StatCard
+                title="Görüntülenme"
+                value={stats.views}
+                subtitle="Haftalık erişim"
+                icon={<svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>}
+                color="orange"
+                loading={loading}
+              />
             </div>
 
             {/* Quick Actions */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-              <a
-                href="/restaurant/menu"
-                className="bg-white p-6 rounded-xl shadow-sm border-2 border-gray-100 hover:border-blue-500 transition group"
-              >
-                <div className="text-4xl mb-3">➕</div>
-                <h3 className="text-lg font-bold text-gray-900 group-hover:text-blue-600 mb-2">
-                  Yeni Ürün Ekle
-                </h3>
-                <p className="text-sm text-gray-600">Menünüze yeni ürün ekleyin</p>
-              </a>
-
-              <a
-                href="/restaurant/categories"
-                className="bg-white p-6 rounded-xl shadow-sm border-2 border-gray-100 hover:border-green-500 transition group"
-              >
-                <div className="text-4xl mb-3">📂</div>
-                <h3 className="text-lg font-bold text-gray-900 group-hover:text-green-600 mb-2">
-                  Kategori Yönet
-                </h3>
-                <p className="text-sm text-gray-600">Kategorileri düzenleyin</p>
-              </a>
-
-              <a
-                href="/restaurant/qr-codes"
-                className="bg-white p-6 rounded-xl shadow-sm border-2 border-gray-100 hover:border-purple-500 transition group"
-              >
-                <div className="text-4xl mb-3">🎯</div>
-                <h3 className="text-lg font-bold text-gray-900 group-hover:text-purple-600 mb-2">
-                  QR Kod Oluştur
-                </h3>
-                <p className="text-sm text-gray-600">Yeni QR kod oluşturun</p>
-              </a>
+            <div className="mb-8">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Hızlı İşlemler</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <ActionCard
+                  href="/restaurant/menu"
+                  icon={<svg className="w-6 h-6 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>}
+                  title="Yeni Ürün Ekle"
+                  description="Menünüze yeni ürün ekleyin"
+                  hoverColor="blue"
+                />
+                <ActionCard
+                  href="/restaurant/categories"
+                  icon={<svg className="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>}
+                  title="Kategori Yönet"
+                  description="Kategorileri düzenleyin"
+                  hoverColor="green"
+                />
+                <ActionCard
+                  href="/restaurant/qr-codes"
+                  icon={<svg className="w-6 h-6 text-violet-500" fill="currentColor" viewBox="0 0 24 24"><path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm4 4H7V7h2v2zm4-6h8v8h-8V3zm2 2v4h4V5h-4zm4 4h-2V7h2v2zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm4 4H7v-2h2v2zm6-6h2v2h-2v-2zm0 4h2v2h-2v-2zm4-4h2v2h-2v-2zm0 4h2v2h-2v-2zm-2-2h2v2h-2v-2z"/></svg>}
+                  title="QR Kod Oluştur"
+                  description="Yeni QR kod oluşturun"
+                  hoverColor="purple"
+                />
+              </div>
             </div>
 
             {/* Recent Products */}
             {recentProducts.length > 0 && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold text-gray-900">Son Eklenen Ürünler</h2>
-                  <a href="/restaurant/menu" className="text-blue-600 hover:text-blue-700 font-medium text-sm">
-                    Tümünü Gör →
+              <div className="bg-white rounded-2xl shadow-soft border border-gray-100 overflow-hidden">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                  <h2 className="text-lg font-semibold text-gray-900">Son Eklenen Ürünler</h2>
+                  <a href="/restaurant/menu" className="text-primary-600 hover:text-primary-700 font-medium text-sm flex items-center gap-1 group">
+                    Tümünü Gör
+                    <svg className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
                   </a>
                 </div>
 
-                <div className="space-y-3">
+                <div className="divide-y divide-gray-50">
                   {recentProducts.map((product) => (
                     <div
                       key={product.id}
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+                      className="flex items-center justify-between px-6 py-4 hover:bg-gray-50/50 transition-colors"
                     >
-                      <div>
-                        <h4 className="font-medium text-gray-900">{product.name}</h4>
-                        <p className="text-sm text-gray-500">{product.category.name}</p>
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-lg">
+                          🍽️
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-gray-900">{product.name}</h4>
+                          <p className="text-sm text-gray-500">{product.category.name}</p>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <span className="font-bold text-green-600">{product.price.toFixed(2)} ₺</span>
+                      <div className="flex items-center gap-4">
+                        <span className="font-semibold text-gray-900">{product.price.toFixed(2)} ₺</span>
                         <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
                             product.isAvailable
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-red-100 text-red-700'
+                              ? 'bg-emerald-50 text-emerald-700'
+                              : 'bg-red-50 text-red-700'
                           }`}
                         >
                           {product.isAvailable ? 'Mevcut' : 'Tükendi'}
