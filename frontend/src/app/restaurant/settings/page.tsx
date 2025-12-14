@@ -145,36 +145,58 @@ export default function RestaurantSettingsPage() {
   return (
     <ProtectedRoute allowedRoles={['RESTAURANT_ADMIN']}>
       <DashboardLayout title="⚙️ Restoran Ayarları">
+        {/* Page Description */}
+        <div className="mb-6">
+          <p className="text-gray-500 text-sm">QR menünüzde görünecek temel bilgileri buradan düzenleyin.</p>
+        </div>
+
         {/* Message */}
         {message && (
           <div
-            className={`mb-6 p-4 rounded-lg ${
-              message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+            className={`mb-6 p-4 rounded-2xl flex items-center gap-3 ${
+              message.type === 'success' 
+                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' 
+                : 'bg-red-50 text-red-800 border border-red-200'
             }`}
           >
-            {message.text}
+            <span className="text-lg">{message.type === 'success' ? '✓' : '✕'}</span>
+            <span className="font-medium">{message.text}</span>
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
           {/* Logo Upload */}
-          <div className="bg-white rounded-xl shadow-sm border p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-2xl">🏪</span>
-              <h2 className="text-xl font-bold text-gray-900">Restoran Logosu</h2>
+          <div className="bg-white rounded-2xl shadow-soft border border-gray-100/80 p-6 hover:shadow-soft-lg transition-shadow duration-200">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center">
+                <svg className="w-5 h-5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h2 className="text-lg font-semibold text-gray-900">Restoran Logosu</h2>
             </div>
 
             <div className="space-y-4">
-              {logoPreview && (
-                <div className="w-full h-48 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
+              {logoPreview ? (
+                <div className="w-full h-44 bg-gray-50 rounded-xl overflow-hidden flex items-center justify-center border-2 border-dashed border-gray-200">
                   <img src={logoPreview} alt="Logo" className="max-w-full max-h-full object-contain" />
+                </div>
+              ) : (
+                <div className="w-full h-44 bg-gray-50 rounded-xl flex flex-col items-center justify-center border-2 border-dashed border-gray-200 text-gray-400">
+                  <svg className="w-10 h-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span className="text-sm">Logo yüklenmedi</span>
                 </div>
               )}
 
               <div className="flex gap-3">
-                <label className="flex-1 cursor-pointer">
-                  <div className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-center font-medium">
-                    {uploadingLogo ? 'Yükleniyor...' : '📤 Logo Yükle'}
+                <label className="flex-1 cursor-pointer group">
+                  <div className="px-4 py-3 bg-primary-500 text-white rounded-xl hover:bg-primary-600 hover:shadow-lg text-center font-semibold text-sm flex items-center justify-center gap-2 transition-all duration-200">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    {uploadingLogo ? 'Yükleniyor...' : 'Logo Yükle'}
                   </div>
                   <input
                     type="file"
@@ -191,37 +213,53 @@ export default function RestaurantSettingsPage() {
                       setFormData({ ...formData, logo: '' });
                       setLogoPreview('');
                     }}
-                    className="px-4 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                    className="px-4 py-3 bg-gray-100 text-gray-600 rounded-xl hover:bg-red-50 hover:text-red-600 transition-colors"
                   >
-                    🗑️
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
                   </button>
                 )}
               </div>
 
-              <p className="text-sm text-gray-500">
-                Logo, QR menüde restoran adının yanında gösterilir. (Önerilen: 500x500px, max 2MB)
+              <p className="text-xs text-gray-400">
+                Önerilen: 500×500px, maksimum 2MB
               </p>
             </div>
           </div>
 
           {/* Header Image Upload */}
-          <div className="bg-white rounded-xl shadow-sm border p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-2xl">🖼️</span>
-              <h2 className="text-xl font-bold text-gray-900">Header Görseli</h2>
+          <div className="bg-white rounded-2xl shadow-soft border border-gray-100/80 p-6 hover:shadow-soft-lg transition-shadow duration-200">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center">
+                <svg className="w-5 h-5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                </svg>
+              </div>
+              <h2 className="text-lg font-semibold text-gray-900">Header Görseli</h2>
             </div>
 
             <div className="space-y-4">
-              {headerPreview && (
-                <div className="w-full h-48 bg-gray-100 rounded-lg overflow-hidden">
+              {headerPreview ? (
+                <div className="w-full h-44 bg-gray-50 rounded-xl overflow-hidden border-2 border-dashed border-gray-200">
                   <img src={headerPreview} alt="Header" className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <div className="w-full h-44 bg-gray-50 rounded-xl flex flex-col items-center justify-center border-2 border-dashed border-gray-200 text-gray-400">
+                  <svg className="w-10 h-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                  </svg>
+                  <span className="text-sm">Header yüklenmedi</span>
                 </div>
               )}
 
               <div className="flex gap-3">
-                <label className="flex-1 cursor-pointer">
-                  <div className="px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-center font-medium">
-                    {uploadingHeader ? 'Yükleniyor...' : '📤 Header Yükle'}
+                <label className="flex-1 cursor-pointer group">
+                  <div className="px-4 py-3 bg-primary-100 text-primary-700 rounded-xl hover:bg-primary-200 text-center font-semibold text-sm flex items-center justify-center gap-2 transition-all duration-200 border border-primary-200">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    {uploadingHeader ? 'Yükleniyor...' : 'Header Yükle'}
                   </div>
                   <input
                     type="file"
@@ -238,34 +276,40 @@ export default function RestaurantSettingsPage() {
                       setFormData({ ...formData, headerImage: '' });
                       setHeaderPreview('');
                     }}
-                    className="px-4 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                    className="px-4 py-3 bg-gray-100 text-gray-600 rounded-xl hover:bg-red-50 hover:text-red-600 transition-colors"
                   >
-                    🗑️
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
                   </button>
                 )}
               </div>
 
-              <p className="text-sm text-gray-500">
-                Header, QR menü sayfasının en üstünde gösterilir. (Önerilen: 1200x400px, max 5MB)
+              <p className="text-xs text-gray-400">
+                Önerilen: 1200×400px, maksimum 5MB
               </p>
             </div>
           </div>
 
           {/* Basic Info */}
-          <div className="bg-white rounded-xl shadow-sm border p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-2xl">📝</span>
-              <h2 className="text-xl font-bold text-gray-900">Temel Bilgiler</h2>
+          <div className="bg-white rounded-2xl shadow-soft border border-gray-100/80 p-6 hover:shadow-soft-lg transition-shadow duration-200">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center">
+                <svg className="w-5 h-5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </div>
+              <h2 className="text-lg font-semibold text-gray-900">Temel Bilgiler</h2>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Restoran Adı</label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200 text-gray-900"
                 />
               </div>
 
@@ -275,98 +319,141 @@ export default function RestaurantSettingsPage() {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200 text-gray-900 resize-none"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Telefon</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <span className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                    Telefon
+                  </span>
+                </label>
                 <input
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200 text-gray-900"
                   placeholder="05XX XXX XX XX"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <span className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    Email
+                  </span>
+                </label>
                 <input
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200 text-gray-900"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Adres</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <span className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Adres
+                  </span>
+                </label>
                 <textarea
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200 text-gray-900 resize-none"
                 />
               </div>
             </div>
           </div>
 
           {/* Social Media */}
-          <div className="bg-white rounded-xl shadow-sm border p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-2xl">📱</span>
-              <h2 className="text-xl font-bold text-gray-900">Sosyal Medya</h2>
+          <div className="bg-white rounded-2xl shadow-soft border border-gray-100/80 p-6 hover:shadow-soft-lg transition-shadow duration-200">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center">
+                <svg className="w-5 h-5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+                </svg>
+              </div>
+              <h2 className="text-lg font-semibold text-gray-900">Sosyal Medya</h2>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <span className="inline-flex items-center gap-2">
-                    📸 Instagram URL
+                  <span className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-pink-500" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                    </svg>
+                    Instagram URL
                   </span>
                 </label>
                 <input
                   type="url"
                   value={formData.instagramUrl}
                   onChange={(e) => setFormData({ ...formData, instagramUrl: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200 text-gray-900"
                   placeholder="https://instagram.com/restoraniniz"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <span className="inline-flex items-center gap-2">
-                    📘 Facebook URL
+                  <span className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-blue-600" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                    Facebook URL
                   </span>
                 </label>
                 <input
                   type="url"
                   value={formData.facebookUrl}
                   onChange={(e) => setFormData({ ...formData, facebookUrl: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200 text-gray-900"
                   placeholder="https://facebook.com/restoraniniz"
                 />
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
-                <p className="text-sm text-blue-800">
-                  💡 <strong>İpucu:</strong> Sosyal medya butonları QR menüdeki alt barda görünecek ve müşterileriniz tek tıkla hesaplarınıza ulaşabilecek.
-                </p>
+              {/* Info Box */}
+              <div className="bg-primary-50/50 border border-primary-100 rounded-xl p-4 mt-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-primary-100 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <p className="text-sm text-primary-700">
+                    <strong>İpucu:</strong> Sosyal medya butonları QR menüdeki alt barda görünecek ve müşterileriniz tek tıkla hesaplarınıza ulaşabilecek.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Save Button */}
-        <div className="mt-6 flex justify-end">
+        <div className="mt-8 flex justify-end">
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 px-8 py-3.5 bg-primary-500 text-white rounded-xl hover:bg-primary-600 hover:shadow-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
           >
-            {saving ? '💾 Kaydediliyor...' : '💾 Değişiklikleri Kaydet'}
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
           </button>
         </div>
       </DashboardLayout>
