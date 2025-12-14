@@ -323,21 +323,7 @@ export default function Home() {
                     </div>
                   </div>
 
-                  {/* Enhanced Floating Elements */}
-                  <div className="absolute -top-6 -right-6 w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center animate-float shadow-lg shadow-orange-500/50 hover:rotate-12 transition-transform duration-300" style={{animationDelay: '0.5s'}}>
-                    <span className="text-2xl animate-pulse">🎉</span>
-                  </div>
-                  <div className="absolute -bottom-6 -left-6 w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center animate-float shadow-lg shadow-green-500/50 hover:rotate-12 transition-transform duration-300" style={{animationDelay: '1s'}}>
-                    <span className="text-2xl animate-pulse" style={{animationDelay: '0.5s'}}>✨</span>
-                  </div>
-                  
-                  {/* Additional Floating Icons */}
-                  <div className="absolute top-1/4 -right-12 w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center animate-float shadow-lg shadow-blue-500/50" style={{animationDelay: '1.5s', animationDuration: '3.5s'}}>
-                    <span className="text-xl">🍔</span>
-                  </div>
-                  <div className="absolute bottom-1/4 -left-12 w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center animate-float shadow-lg shadow-purple-500/50" style={{animationDelay: '2s', animationDuration: '4s'}}>
-                    <span className="text-xl">🍕</span>
-                  </div>
+
                 </div>
               </div>
             </div>
