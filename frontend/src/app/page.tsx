@@ -204,9 +204,9 @@ export default function Home() {
                   <div className="absolute inset-0 bg-gradient-to-tl from-blue-500/20 via-transparent to-pink-500/20 blur-[80px] animate-pulse" style={{animationDelay: '1s'}}></div>
                   
                   {/* Phone Frame */}
-                  <div className="relative bg-gradient-to-br from-gray-800 to-gray-900 rounded-[3.5rem] p-4 shadow-2xl border border-white/10">
+                  <div className="relative bg-gradient-to-br from-gray-800 to-gray-900 rounded-[3.5rem] p-4 shadow-2xl border border-white/10" style={{overflow: 'visible'}}>
                     {/* Screen */}
-                    <div className="bg-gradient-to-br from-[#1a1a2e] to-[#0f0f1e] rounded-[3rem] overflow-hidden w-[280px] h-[580px]">
+                    <div className="bg-gradient-to-br from-[#1a1a2e] to-[#0f0f1e] rounded-[3rem] w-[280px] h-[580px]" style={{overflow: 'visible'}}>
                       {/* Status Bar */}
                       <div className="h-8 flex items-center justify-center">
                         <div className="w-28 h-6 bg-black rounded-full"></div>
