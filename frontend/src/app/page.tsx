@@ -245,42 +245,46 @@ export default function Home() {
                             </div>
                           ))}
                           
-                          {/* QR Scan Button - Premium Floating Effect */}
+                          {/* QR Scan Button - Hero Element with 50% Overflow */}
                           <div className="relative h-24 rounded-2xl" style={{overflow: 'visible'}}>
-                            {/* QR Float Wrapper - Awwwards Premium Style */}
+                            {/* QR Float Wrapper - 50% outside phone frame */}
                             <div 
-                              className="qr-float-wrapper absolute -bottom-14 -right-14 md:-bottom-16 md:-right-16 z-30 group cursor-pointer"
+                              className="qr-float-wrapper absolute -bottom-28 -right-28 md:-bottom-32 md:-right-32 z-30 group cursor-pointer"
                               style={{overflow: 'visible'}}
                             >
-                              {/* Ambient Glow - Soft outer radiance */}
-                              <div className="absolute inset-0 w-40 h-40 md:w-44 md:h-44 bg-gradient-to-br from-orange-500/40 via-pink-500/30 to-purple-500/20 rounded-[2rem] blur-2xl opacity-60 group-hover:opacity-80 transition-opacity duration-500 animate-pulse"></div>
+                              {/* Multi-layer Ambient Glow */}
+                              <div className="absolute -inset-4 w-56 h-56 md:w-64 md:h-64 bg-gradient-to-br from-orange-500/50 via-pink-500/40 to-purple-500/30 rounded-[2.5rem] blur-3xl opacity-70 group-hover:opacity-90 transition-opacity duration-500 animate-pulse"></div>
+                              <div className="absolute -inset-2 w-52 h-52 md:w-60 md:h-60 bg-gradient-to-tr from-orange-400/30 to-pink-500/20 rounded-[2rem] blur-2xl opacity-50 animate-pulse" style={{animationDelay: '0.5s'}}></div>
                               
-                              {/* QR Card Container */}
+                              {/* QR Card Container - 40% larger than other cards */}
                               <div 
-                                className="relative w-40 h-40 md:w-44 md:h-44 rounded-[1.5rem] bg-gradient-to-br from-[#1a1a2e] via-[#1f1f35] to-[#0f0f1e] border border-white/10 animate-slideUp group-hover:-translate-y-2 group-hover:scale-[1.03] transition-all duration-500 ease-out"
+                                className="relative w-48 h-48 md:w-56 md:h-56 rounded-[1.75rem] bg-gradient-to-br from-[#1a1a2e] via-[#1f1f35] to-[#0f0f1e] border-2 border-orange-500/30 animate-slideUp group-hover:-translate-y-3 group-hover:scale-[1.04] transition-all duration-500 ease-out"
                                 style={{
                                   animationDelay: '0.75s',
-                                  boxShadow: '0 25px 50px -12px rgba(249, 115, 22, 0.25), 0 12px 24px -8px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(249, 115, 22, 0.1), inset 0 1px 0 rgba(255,255,255,0.05)'
+                                  boxShadow: '0 30px 60px -15px rgba(249, 115, 22, 0.35), 0 20px 40px -10px rgba(0, 0, 0, 0.5), 0 0 80px -20px rgba(249, 115, 22, 0.4), 0 0 0 1px rgba(249, 115, 22, 0.15), inset 0 1px 0 rgba(255,255,255,0.08)'
                                 }}
                               >
                                 {/* Inner Gradient Overlay */}
-                                <div className="absolute inset-0 rounded-[1.5rem] bg-gradient-to-t from-orange-500/5 via-transparent to-white/5 pointer-events-none"></div>
+                                <div className="absolute inset-0 rounded-[1.75rem] bg-gradient-to-t from-orange-500/8 via-transparent to-white/5 pointer-events-none"></div>
                                 
                                 {/* Shimmer Effect on Hover */}
-                                <div className="absolute inset-0 rounded-[1.5rem] opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none overflow-hidden">
-                                  <div className="absolute -inset-full bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-12 group-hover:animate-shimmer"></div>
+                                <div className="absolute inset-0 rounded-[1.75rem] opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none overflow-hidden">
+                                  <div className="absolute -inset-full bg-gradient-to-r from-transparent via-white/8 to-transparent skew-x-12 group-hover:animate-shimmer"></div>
                                 </div>
                                 
+                                {/* Pulsing Ring Effect */}
+                                <div className="absolute inset-0 rounded-[1.75rem] border-2 border-orange-500/20 animate-ping opacity-30 pointer-events-none" style={{animationDuration: '2s'}}></div>
+                                
                                 {/* QR Content */}
-                                <div className="relative h-full flex flex-col items-center justify-center p-4">
+                                <div className="relative h-full flex flex-col items-center justify-center p-5">
                                   {/* QR Icon with Premium Styling */}
                                   <div className="relative">
                                     {/* Icon Glow */}
-                                    <div className="absolute inset-0 w-20 h-20 md:w-22 md:h-22 bg-orange-500/20 rounded-2xl blur-xl opacity-60 group-hover:opacity-80 transition-opacity"></div>
+                                    <div className="absolute -inset-4 w-28 h-28 md:w-32 md:h-32 bg-orange-500/25 rounded-3xl blur-2xl opacity-70 group-hover:opacity-100 transition-opacity"></div>
                                     
-                                    {/* QR Icon */}
+                                    {/* QR Icon - Larger */}
                                     <svg 
-                                      className="relative w-20 h-20 md:w-22 md:h-22 text-white drop-shadow-[0_4px_12px_rgba(249,115,22,0.3)] group-hover:drop-shadow-[0_8px_20px_rgba(249,115,22,0.4)] transition-all duration-300" 
+                                      className="relative w-24 h-24 md:w-28 md:h-28 text-white drop-shadow-[0_6px_16px_rgba(249,115,22,0.4)] group-hover:drop-shadow-[0_10px_24px_rgba(249,115,22,0.5)] transition-all duration-300" 
                                       fill="currentColor" 
                                       viewBox="0 0 24 24"
                                     >
@@ -288,14 +292,17 @@ export default function Home() {
                                     </svg>
                                   </div>
                                   
-                                  {/* Label with Gradient */}
-                                  <p className="mt-2 text-xs md:text-sm font-bold bg-gradient-to-r from-white via-orange-100 to-white bg-clip-text text-transparent">
+                                  {/* Label with Gradient - Larger */}
+                                  <p className="mt-3 text-sm md:text-base font-bold bg-gradient-to-r from-white via-orange-200 to-white bg-clip-text text-transparent tracking-wide">
                                     Masanızı Tarayın
                                   </p>
                                 </div>
                                 
-                                {/* Corner Accent */}
-                                <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 animate-pulse shadow-lg shadow-orange-500/50"></div>
+                                {/* Corner Accent - Larger */}
+                                <div className="absolute top-4 right-4 w-3 h-3 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 animate-pulse shadow-lg shadow-orange-500/60"></div>
+                                
+                                {/* Bottom Accent Line */}
+                                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-16 h-1 rounded-full bg-gradient-to-r from-orange-500/50 via-pink-500/50 to-orange-500/50 opacity-60"></div>
                               </div>
                             </div>
                           </div>
