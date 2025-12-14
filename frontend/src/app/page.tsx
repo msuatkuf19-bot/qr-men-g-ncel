@@ -104,7 +104,7 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-32 pb-20 px-6">
+      <section className="relative overflow-hidden lg:overflow-visible pt-32 pb-20 px-6">
         {/* Background Effects */}
         <div className="absolute top-20 right-10 w-96 h-96 bg-orange-500/20 rounded-full blur-[120px] animate-pulse"></div>
         <div className="absolute bottom-20 left-10 w-80 h-80 bg-pink-500/20 rounded-full blur-[120px] animate-pulse delay-75"></div>
