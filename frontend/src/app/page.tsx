@@ -1039,6 +1039,27 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* Scroll To Top Button */}
+      <button
+        type="button"
+        aria-label="En üste çık"
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        className="fixed right-5 bottom-[calc(1.25rem+env(safe-area-inset-bottom))] z-50 group"
+      >
+        <span className="relative flex h-12 w-12 items-center justify-center rounded-2xl border border-orange-500/30 glass-effect overflow-hidden transition-all duration-200 ease-out hover:scale-110 hover:border-orange-500/50">
+          <span className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-pink-500/20 opacity-70 group-hover:opacity-100 transition-opacity" />
+          <span className="absolute -inset-8 bg-orange-500/15 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
+          <svg
+            className="relative w-5 h-5 text-orange-300 group-hover:text-white transition-colors animate-bounce"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
+          </svg>
+        </span>
+      </button>
     </main>
   );
 }
