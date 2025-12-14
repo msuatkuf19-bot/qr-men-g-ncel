@@ -240,7 +240,7 @@ export default function Home() {
                           ].map((cat, i) => (
                             <div 
                               key={i} 
-                              className={`relative h-24 rounded-2xl overflow-hidden animate-slideUp`}
+                              className={`relative h-24 rounded-2xl overflow-hidden animate-slideUp ${cat.name === 'Kahvaltı' ? 'z-20' : ''}`}
                               style={{animationDelay: `${i * 0.15}s`}}
                             >
                               <div className={`absolute inset-0 bg-gradient-to-br ${cat.color} opacity-90`}></div>
@@ -252,10 +252,10 @@ export default function Home() {
                           ))}
                           
                           {/* QR Scan Button - Hero Element with 50% Overflow */}
-                          <div className="relative h-24 rounded-2xl" style={{overflow: 'visible'}}>
+                          <div className="relative h-24 rounded-2xl col-start-2 row-start-3" style={{overflow: 'visible'}}>
                             {/* QR Float Wrapper - Responsive overflow */}
                             <div 
-                              className="qr-float-wrapper absolute -bottom-16 -right-12 sm:-bottom-20 sm:-right-16 md:-bottom-28 md:-right-24 lg:-bottom-32 lg:-right-28 z-30 group cursor-pointer"
+                              className="qr-float-wrapper absolute top-0 right-0 translate-x-10 translate-y-10 sm:translate-x-12 sm:translate-y-12 md:translate-x-16 md:translate-y-16 lg:translate-x-20 lg:translate-y-20 z-30 group cursor-pointer"
                               style={{overflow: 'visible'}}
                             >
                               {/* Multi-layer Ambient Glow */}
