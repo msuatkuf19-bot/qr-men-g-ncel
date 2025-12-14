@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
 import QrBox from '@/components/QrBox';
 import { slugifyTR } from '@/utils/slugify';
+import { Store, Plus, Pencil, Trash2, User, Phone, Mail, MapPin } from 'lucide-react';
 
 interface Restaurant {
   id: string;
@@ -198,69 +199,106 @@ export default function AdminRestaurants() {
 
   return (
     <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
-      <DashboardLayout title="🏪 Restoran Yönetimi">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <div>
-            <p className="text-gray-600 text-sm sm:text-base">Tüm restoranları yönetin</p>
+      <DashboardLayout>
+        {/* Page Header */}
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-200/70">
+                  <Store className="h-5 w-5" strokeWidth={1.9} aria-hidden="true" />
+                </span>
+                <div className="min-w-0">
+                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+                    Restoran Yönetimi
+                  </h1>
+                  <p className="mt-1 text-[13px] sm:text-[14px] text-slate-500">
+                    Tüm restoranları yönetin, iletişim bilgilerini ve istatistikleri görüntüleyin
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                resetForm();
+                setShowModal(true);
+              }}
+              className="w-full sm:w-auto h-11 px-4 sm:px-5 rounded-xl bg-primary-600 text-white hover:bg-primary-700 shadow-sm hover:shadow-md transition-all duration-200 ease-out font-semibold text-sm flex items-center justify-center gap-2"
+            >
+              <Plus className="h-4.5 w-4.5" strokeWidth={2} aria-hidden="true" />
+              <span>Yeni Restoran</span>
+            </button>
           </div>
-          <button
-            onClick={() => {
-              resetForm();
-              setShowModal(true);
-            }}
-            className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center justify-center gap-2"
-          >
-            <span>➕</span>
-            <span>Yeni Restoran</span>
-          </button>
         </div>
 
         {/* Restaurants - Mobile Cards / Desktop Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200/70 overflow-hidden">
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
             </div>
           ) : restaurants.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">Henüz restoran eklenmemiş</p>
+              <p className="text-slate-600 text-base sm:text-lg">Henüz restoran eklenmemiş</p>
             </div>
           ) : (
             <>
               {/* Mobile Cards */}
-              <div className="lg:hidden divide-y">
+              <div className="lg:hidden divide-y divide-slate-200/70">
                 {restaurants.map((restaurant) => (
-                  <div key={restaurant.id} className="p-4 space-y-3">
+                  <div key={restaurant.id} className="p-4 sm:p-5 space-y-3 hover:bg-slate-50/70 transition-colors">
                     <div className="flex justify-between items-start">
                       <div>
-                        <h3 className="font-medium text-gray-900">{restaurant.name}</h3>
-                        <p className="text-sm text-gray-500">/{restaurant.slug}</p>
+                        <h3 className="text-[14px] font-semibold text-slate-900">{restaurant.name}</h3>
+                        <p className="mt-0.5 text-[12px] text-slate-500">/{restaurant.slug}</p>
                       </div>
                       <div className="flex gap-1">
-                        <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">
+                        <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[12px] font-semibold bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-200/80">
                           {restaurant._count.categories} Kat
                         </span>
-                        <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs">
+                        <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[12px] font-semibold bg-violet-50 text-violet-700 ring-1 ring-inset ring-violet-200/80">
                           {restaurant._count.qrCodes} QR
                         </span>
                       </div>
                     </div>
-                    <div className="text-sm text-gray-600">
-                      <p>👤 {restaurant.owner.name}</p>
-                      {restaurant.phone && <p>📞 {restaurant.phone}</p>}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2 text-[13px] text-slate-700">
+                        <User className="h-4 w-4 text-slate-400" strokeWidth={2} aria-hidden="true" />
+                        <span className="truncate">{restaurant.owner.name}</span>
+                      </div>
+                      {restaurant.phone ? (
+                        <div className="flex items-center gap-2 text-[13px] text-slate-600">
+                          <Phone className="h-4 w-4 text-slate-400" strokeWidth={2} aria-hidden="true" />
+                          <span className="truncate">{restaurant.phone}</span>
+                        </div>
+                      ) : null}
+                      {restaurant.email ? (
+                        <div className="flex items-center gap-2 text-[13px] text-slate-600">
+                          <Mail className="h-4 w-4 text-slate-400" strokeWidth={2} aria-hidden="true" />
+                          <span className="truncate">{restaurant.email}</span>
+                        </div>
+                      ) : null}
+                      {restaurant.address ? (
+                        <div className="flex items-center gap-2 text-[12px] text-slate-500">
+                          <MapPin className="h-4 w-4 text-slate-400" strokeWidth={2} aria-hidden="true" />
+                          <span className="line-clamp-2">{restaurant.address}</span>
+                        </div>
+                      ) : null}
                     </div>
                     <div className="flex gap-2">
                       <button
                         onClick={() => openEditModal(restaurant)}
-                        className="flex-1 px-3 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium"
+                        className="flex-1 h-10 px-3 rounded-xl border border-primary-200 text-primary-700 bg-primary-50/40 hover:bg-primary-50 transition-colors text-sm font-semibold inline-flex items-center justify-center gap-2"
                       >
+                        <Pencil className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
                         Düzenle
                       </button>
                       <button
                         onClick={() => handleDelete(restaurant.id)}
-                        className="flex-1 px-3 py-2 bg-red-500 text-white rounded-lg text-sm font-medium"
+                        className="flex-1 h-10 px-3 rounded-xl border border-rose-200 text-rose-700 bg-rose-50/40 hover:bg-rose-50 transition-colors text-sm font-semibold inline-flex items-center justify-center gap-2"
                       >
+                        <Trash2 className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
                         Sil
                       </button>
                     </div>
@@ -271,24 +309,27 @@ export default function AdminRestaurants() {
               {/* Desktop Table */}
               <div className="hidden lg:block overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 border-b">
+                <thead className="bg-slate-50 border-b border-slate-200/70">
                   <tr>
-                    <th className="text-left py-4 px-6 font-semibold text-gray-700">Restoran</th>
-                    <th className="text-left py-4 px-6 font-semibold text-gray-700">Sahip</th>
-                    <th className="text-left py-4 px-6 font-semibold text-gray-700">İletişim</th>
-                    <th className="text-center py-4 px-6 font-semibold text-gray-700">İstatistik</th>
-                    <th className="text-right py-4 px-6 font-semibold text-gray-700">İşlemler</th>
+                    <th className="text-left py-3.5 px-6 text-[12px] font-semibold text-slate-600">Restoran</th>
+                    <th className="text-left py-3.5 px-6 text-[12px] font-semibold text-slate-600">Sahip</th>
+                    <th className="text-left py-3.5 px-6 text-[12px] font-semibold text-slate-600">İletişim</th>
+                    <th className="text-center py-3.5 px-6 text-[12px] font-semibold text-slate-600">İstatistik</th>
+                    <th className="text-right py-3.5 px-6 text-[12px] font-semibold text-slate-600">İşlemler</th>
                   </tr>
                 </thead>
                 <tbody>
                   {restaurants.map((restaurant) => (
-                    <tr key={restaurant.id} className="border-b hover:bg-gray-50">
+                    <tr
+                      key={restaurant.id}
+                      className="border-b border-slate-200/60 hover:bg-slate-50/70 transition-colors"
+                    >
                       <td className="py-4 px-6">
                         <div>
-                          <div className="font-medium text-gray-900">{restaurant.name}</div>
-                          <div className="text-sm text-gray-500">/{restaurant.slug}</div>
+                          <div className="text-[14px] font-semibold text-slate-900">{restaurant.name}</div>
+                          <div className="mt-0.5 text-[12px] text-slate-500">/{restaurant.slug}</div>
                           {restaurant.description && (
-                            <div className="text-xs text-gray-400 mt-1 line-clamp-1">
+                            <div className="text-[12px] text-slate-500 mt-1 line-clamp-1">
                               {restaurant.description}
                             </div>
                           )}
@@ -296,29 +337,38 @@ export default function AdminRestaurants() {
                       </td>
                       <td className="py-4 px-6">
                         <div>
-                          <div className="text-sm font-medium text-gray-900">{restaurant.owner.name}</div>
-                          <div className="text-xs text-gray-500">{restaurant.owner.email}</div>
+                          <div className="text-[13px] font-semibold text-slate-900">{restaurant.owner.name}</div>
+                          <div className="mt-0.5 text-[12px] text-slate-500">{restaurant.owner.email}</div>
                         </div>
                       </td>
                       <td className="py-4 px-6">
-                        <div className="text-sm">
-                          {restaurant.phone && (
-                            <div className="text-gray-600">📞 {restaurant.phone}</div>
-                          )}
-                          {restaurant.email && (
-                            <div className="text-gray-600">📧 {restaurant.email}</div>
-                          )}
-                          {restaurant.address && (
-                            <div className="text-gray-500 text-xs mt-1">📍 {restaurant.address}</div>
-                          )}
+                        <div className="space-y-1">
+                          {restaurant.phone ? (
+                            <div className="flex items-center gap-2 text-[13px] text-slate-700">
+                              <Phone className="h-4 w-4 text-slate-400" strokeWidth={2} aria-hidden="true" />
+                              <span className="truncate">{restaurant.phone}</span>
+                            </div>
+                          ) : null}
+                          {restaurant.email ? (
+                            <div className="flex items-center gap-2 text-[13px] text-slate-700">
+                              <Mail className="h-4 w-4 text-slate-400" strokeWidth={2} aria-hidden="true" />
+                              <span className="truncate">{restaurant.email}</span>
+                            </div>
+                          ) : null}
+                          {restaurant.address ? (
+                            <div className="flex items-center gap-2 text-[12px] text-slate-500">
+                              <MapPin className="h-4 w-4 text-slate-400" strokeWidth={2} aria-hidden="true" />
+                              <span className="line-clamp-2">{restaurant.address}</span>
+                            </div>
+                          ) : null}
                         </div>
                       </td>
                       <td className="py-4 px-6">
-                        <div className="flex justify-center gap-3">
-                          <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                        <div className="flex justify-center gap-2">
+                          <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[12px] font-semibold bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-200/80">
                             {restaurant._count.categories} Kategori
                           </span>
-                          <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">
+                          <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[12px] font-semibold bg-violet-50 text-violet-700 ring-1 ring-inset ring-violet-200/80">
                             {restaurant._count.qrCodes} QR
                           </span>
                         </div>
@@ -327,14 +377,16 @@ export default function AdminRestaurants() {
                         <div className="flex justify-end gap-2">
                           <button
                             onClick={() => openEditModal(restaurant)}
-                            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm font-medium"
+                            className="h-9 px-3.5 rounded-xl border border-primary-200 text-primary-700 bg-primary-50/40 hover:bg-primary-50 hover:shadow-sm transition-all duration-200 text-sm font-semibold inline-flex items-center gap-2"
                           >
+                            <Pencil className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
                             Düzenle
                           </button>
                           <button
                             onClick={() => handleDelete(restaurant.id)}
-                            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm font-medium"
+                            className="h-9 px-3.5 rounded-xl border border-rose-200 text-rose-700 bg-rose-50/40 hover:bg-rose-50 hover:shadow-sm transition-all duration-200 text-sm font-semibold inline-flex items-center gap-2"
                           >
+                            <Trash2 className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
                             Sil
                           </button>
                         </div>
