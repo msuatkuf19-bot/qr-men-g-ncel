@@ -13,6 +13,7 @@ interface Product {
   description?: string;
   price: number;
   image?: string;
+  imageUrl?: string;
   isAvailable: boolean;
   category: {
     id: string;
