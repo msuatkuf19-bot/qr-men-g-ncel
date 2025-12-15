@@ -257,7 +257,7 @@ export const createProduct = async (
     }
 
     // Görsel yoksa default ürün görseli ata
-    const DEFAULT_PRODUCT_IMAGE = '/ürün%20resmi.jpg';
+    const DEFAULT_PRODUCT_IMAGE = '/product-placeholder.jpg';
     const finalImageUrl = imageUrl?.trim() || image?.trim() || DEFAULT_PRODUCT_IMAGE;
 
     const product = await prisma.product.create({
@@ -346,7 +346,7 @@ export const updateProduct = async (
     }
 
     // Görsel kaldırılırsa default ürün görseli ata
-    const DEFAULT_PRODUCT_IMAGE = '/ürün%20resmi.jpg';
+    const DEFAULT_PRODUCT_IMAGE = '/product-placeholder.jpg';
     const finalImageUrl = imageUrl !== undefined 
       ? (imageUrl?.trim() || DEFAULT_PRODUCT_IMAGE)
       : (image !== undefined ? (image?.trim() || DEFAULT_PRODUCT_IMAGE) : undefined);
