@@ -1,10 +1,71 @@
 import QRCode from 'qrcode';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import { createCanvas, loadImage } from 'canvas';
 import prisma from '../config/database';
 import { ApiError } from '../utils/response';
 import { logger } from './logger.service';
 
 export class QRCodeService {
+  /**
+   * QR kodun merkezine logo ekle
+   */
+  private async addLogoToQR(qrDataUrl: string, logoPath?: string | null): Promise<string> {
+    try {
+      // Logo yoksa orijinal QR'ı döndür
+      if (!logoPath) {
+        return qrDataUrl;
+      }
+
+      // QR kodunu canvas'a yükle
+      const qrImage = await loadImage(qrDataUrl);
+      const qrSize = qrImage.width;
+      
+      const canvas = createCanvas(qrSize, qrSize);
+      const ctx = canvas.getContext('2d');
+      
+      // QR kodunu çiz
+      ctx.drawImage(qrImage, 0, 0, qrSize, qrSize);
+      
+      // Logo boyutunu hesapla (QR'ın %18'i)
+      const logoSize = Math.floor(qrSize * 0.18);
+      const logoPosition = (qrSize - logoSize) / 2;
+      
+      // Beyaz pad boyutu (min 8px)
+      const padSize = Math.max(8, Math.floor(logoSize * 0.15));
+      const padPosition = logoPosition - padSize;
+      const padDimension = logoSize + (padSize * 2);
+      
+      // Beyaz yuvarlak pad çiz
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(qrSize / 2, qrSize / 2, padDimension / 2, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Logoyu yükle ve çiz
+      try {
+        const logo = await loadImage(logoPath);
+        
+        // Logo yuvarlak maske
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(qrSize / 2, qrSize / 2, logoSize / 2, 0, Math.PI * 2);
+        ctx.clip();
+        ctx.drawImage(logo, logoPosition, logoPosition, logoSize, logoSize);
+        ctx.restore();
+        
+        logger.info('QR koduna logo eklendi', { logoPath, logoSize });
+      } catch (logoError) {
+        logger.warn('Logo yüklenemedi, QR kod logosuz oluşturuldu', { logoPath, error: (logoError as Error).message });
+      }
+      
+      // Canvas'ı data URL'e çevir
+      return canvas.toDataURL('image/png');
+    } catch (error) {
+      logger.error('Logo ekleme hatası, orijinal QR döndürülüyor', { error: (error as Error).message });
+      return qrDataUrl;
+    }
+  }
+
   /**
    * QR kod oluştur (PNG veya SVG)
    */
@@ -53,6 +114,10 @@ export class QRCodeService {
             light: '#FFFFFF',
           },
         });
+        
+        // PNG formatında ise logo ekle
+        const logoPath = restaurant.logo ? `${process.cwd()}/uploads${restaurant.logo}` : null;
+        qrImage = await this.addLogoToQR(qrImage, logoPath);
       }
 
       // Veritabanına kaydet
