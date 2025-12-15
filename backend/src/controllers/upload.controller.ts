@@ -79,6 +79,11 @@ export const uploadImage = async (
     const imageType = (req.body.type && Object.values(ImageType).includes(req.body.type)) 
       ? req.body.type 
       : ImageType.OTHER;
+    
+    console.log('Cloudinary upload successful:', {
+      secure_url: uploadResult.secure_url,
+      public_id: uploadResult.public_id
+    });
       
     const image = await prisma.image.create({
       data: {
@@ -89,6 +94,12 @@ export const uploadImage = async (
         type: imageType as any,
         restaurantId,
       },
+    });
+
+    console.log('Image saved to database:', {
+      id: image.id,
+      url: image.url,
+      type: image.type
     });
 
     sendSuccess(res, image, 'Görsel başarıyla yüklendi', 201);

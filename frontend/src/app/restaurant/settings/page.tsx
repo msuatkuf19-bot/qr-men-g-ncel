@@ -86,11 +86,15 @@ export default function RestaurantSettingsPage() {
     try {
       setUploadingLogo(true);
       const response = await apiClient.uploadFile(file, 'logo');
+      console.log('Logo upload response:', response);
       const imageUrl = response.data.url;
+      console.log('Image URL from response:', imageUrl);
       
       setFormData({ ...formData, logo: imageUrl });
       // Cloudinary tam URL dönüyor, local path ise backend URL ekle
-      setLogoPreview(imageUrl.startsWith('http') ? imageUrl : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${imageUrl}`);
+      const previewUrl = imageUrl.startsWith('http') ? imageUrl : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${imageUrl}`;
+      console.log('Preview URL:', previewUrl);
+      setLogoPreview(previewUrl);
       setMessage({ type: 'success', text: '✅ Logo yüklendi!' });
     } catch (error: any) {
       setMessage({ type: 'error', text: 'Logo yüklenemedi' });
