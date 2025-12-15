@@ -59,7 +59,7 @@ const THEME_PRESETS: Record<string, Partial<CompleteTheme>> = {
     headerBackgroundType: 'solid',
     showHeaderOverlay: false,
     cardRadius: 'sm',
-    showProductImages: false,
+    showProductImages: true, // Changed from false to true
   },
 };
 

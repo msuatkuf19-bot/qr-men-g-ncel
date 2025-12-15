@@ -321,25 +321,23 @@ export default function PublicMenu() {
                     }}
                   >
                     <div className="flex gap-4 p-4">
-                      {theme.showProductImages ? (
-                        <img
-                          src={
-                            // Eğer URL http ile başlıyorsa (Cloudinary), direkt kullan
-                            (product.imageUrl && product.imageUrl.startsWith('http'))
-                              ? product.imageUrl
-                              : (product.image && product.image.startsWith('http'))
-                              ? product.image
-                              : (product.imageUrl || product.image)
-                              ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${product.imageUrl || product.image}`
-                              : '/ürün resmi.jpg'
-                          }
-                          alt={product.name}
-                          className={'w-24 h-24 object-cover flex-shrink-0 ' + cardRadiusClass}
-                          onError={(e) => {
-                            e.currentTarget.src = '/ürün resmi.jpg';
-                          }}
-                        />
-                      ) : null}
+                      <img
+                        src={
+                          // Eğer URL http ile başlıyorsa (Cloudinary), direkt kullan
+                          (product.imageUrl && product.imageUrl.startsWith('http'))
+                            ? product.imageUrl
+                            : (product.image && product.image.startsWith('http'))
+                            ? product.image
+                            : (product.imageUrl || product.image)
+                            ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${product.imageUrl || product.image}`
+                            : '/ürün resmi.jpg'
+                        }
+                        alt={product.name}
+                        className={'w-24 h-24 object-cover flex-shrink-0 ' + cardRadiusClass}
+                        onError={(e) => {
+                          e.currentTarget.src = '/ürün resmi.jpg';
+                        }}
+                      />
                       <div className="flex-1">
                         <div className="flex items-start justify-between">
                           <h3 
