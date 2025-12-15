@@ -4,12 +4,14 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
+import toast from 'react-hot-toast';
 
 interface Category {
   id: string;
   name: string;
   description?: string;
   displayOrder: number;
+  order: number;
   _count?: {
     products: number;
   };
@@ -20,6 +22,7 @@ export default function RestaurantCategories() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -35,34 +38,66 @@ export default function RestaurantCategories() {
       setLoading(true);
       const restaurantRes = await apiClient.getMyRestaurant();
       const restaurant = restaurantRes.data;
-      const categoriesRes = await apiClient.getCategories(restaurant.id);
-      setCategories(categoriesRes.data || []);
+      const cats = (categoriesRes.data || []).sort((a: Category, b: Category) => (a.order || 0) - (b.order || 0));
+      setCategories(cats);
     } catch (error) {
+      console.error('Kategoriler yüklenemedi:', error);
+      toast.error('❌ Kategoriler yüklenemedi'
       console.error('Kategoriler yüklenemedi:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  cosetSubmitting(true);
+    
     try {
       const restaurantRes = await apiClient.getMyRestaurant();
       const restaurantId = restaurantRes.data.id;
 
       if (editingCategory) {
         await apiClient.updateCategory(editingCategory.id, formData);
+        toast.success('✅ Kategori güncellendi!');
       } else {
         await apiClient.createCategory({ ...formData, restaurantId });
+        toast.success('✅ Kategori oluşturuldu!');
       }
       setShowModal(false);
       resetForm();
-      loadCategories();
+      await loadCategories();
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.message || 'Bir hata oluştu';
+      toast.error(`❌ ${errorMsg}`);
+    } finally {
+      setSubmitting(false
     } catch (error: any) {
       alert(error.response?.data?.message || 'Bir hata oluştu');
+    }toast.success('✅ Kategori silindi');
+      await loadCategories();
+    } catch (error: any) {
+      toast.error('❌ Silinemedi');
     }
   };
 
+  const moveCategory = async (index: number, direction: 'up' | 'down') => {
+    if (direction === 'up' && index === 0) return;
+    if (direction === 'down' && index === categories.length - 1) return;
+
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    const newCategories = [...categories];
+    [newCategories[index], newCategories[newIndex]] = [newCategories[newIndex], newCategories[index]];
+    
+    // Optimistically update UI
+    setCategories(newCategories);
+
+    try {
+      const categoryIds = newCategories.map(cat => cat.id);
+      await apiClient.reorderCategories(categoryIds);
+      toast.success('✅ Sıralama güncellendi!');
+    } catch (error) {
+      // Revert on error
+      setCategories(categories);
+      toast.error('❌ Sıralama güncelle
   const handleDelete = async (id: string) => {
     if (!confirm('Bu kategoriyi silmek istediğinizden emin misiniz?')) return;
     try {
@@ -124,7 +159,7 @@ export default function RestaurantCategories() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {categories.map((category) => (
+            {categories.map((category, index) => (
               <div
                 key={category.id}
                 className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition"
@@ -140,9 +175,31 @@ export default function RestaurantCategories() {
                         📦 <strong>{category._count?.products || 0}</strong> ürün
                       </span>
                       <span className="flex items-center gap-1">
-                        🔢 Sıra: <strong>{category.displayOrder}</strong>
+                        🔢 Sıra: <strong>{index + 1}</strong>
                       </span>
                     </div>
+                  </div>
+                  <div className="flex flex-col gap-1 ml-2">
+                    <button
+                      onClick={() => moveCategory(index, 'up')}
+                      disabled={index === 0}
+                      className="p-1 text-gray-600 hover:bg-gray-100 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                      title="Yukarı taşı"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => moveCategory(index, 'down')}
+                      disabled={index === categories.length - 1}
+                      className="p-1 text-gray-600 hover:bg-gray-100 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                      title="Aşağı taşı"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
                   </div>
                 </div>
                 <div className="flex gap-2 pt-4 border-t">
@@ -217,9 +274,13 @@ export default function RestaurantCategories() {
                   <div className="flex gap-3 pt-4">
                     <button
                       type="submit"
-                      className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                      disabled={submitting}
+                      className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                      {editingCategory ? 'Güncelle' : 'Oluştur'}
+                      {submitting && (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      )}
+                      {submitting ? 'Kaydediliyor...' : (editingCategory ? 'Güncelle' : 'Oluştur')}
                     </button>
                     <button
                       type="button"

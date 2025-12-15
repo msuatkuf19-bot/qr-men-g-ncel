@@ -4,6 +4,7 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
+import toast from 'react-hot-toast';
 
 interface Product {
   id: string;
@@ -46,6 +47,7 @@ export default function RestaurantMenu() {
   const [imagePreview, setImagePreview] = useState<string>('');
   const [uploadingImage, setUploadingImage] = useState(false);
   const [restaurantId, setRestaurantId] = useState<string>('');
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -84,20 +86,28 @@ export default function RestaurantMenu() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitting(true);
+    
     try {
       if (editingProduct) {
         await apiClient.updateProduct(editingProduct.id, formData);
+        toast.success('✅ Ürün başarıyla güncellendi!');
       } else {
         await apiClient.createProduct(formData);
+        toast.success('✅ Ürün başarıyla oluşturuldu!');
       }
       setShowModal(false);
       resetForm();
-      loadData();
+      await loadData();
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Bir hata oluştu');
-    }
-  };
-
+      const errorMsg = error.response?.data?.message || 'Bir hata oluştu';
+      toast.error(`❌ ${errorMsg}`);
+    } finally {
+      setSubmitting(false);
+    }toast.success('✅ Ürün silindi');
+      await loadData();
+    } catch (error: any) {
+      toast.error('❌ 
   const handleDelete = async (id: string) => {
     if (!confirm('Bu ürünü silmek istediğinizden emin misiniz?')) return;
     try {
@@ -112,9 +122,10 @@ export default function RestaurantMenu() {
     try {
       await apiClient.updateProduct(product.id, {
         isAvailable: !product.isAvailable,
-      });
-      loadData();
+      toast.success(product.isAvailable ? '📦 Ürün tükendi olarak işaretlendi' : '✅ Ürün mevcut olarak işaretlendi');
+      await loadData();
     } catch (error: any) {
+      toast.error('❌ error: any) {
       alert('Durum güncellenemedi');
     }
   };
@@ -128,8 +139,9 @@ export default function RestaurantMenu() {
       const response = await apiClient.uploadFile(file, 'product');
       const imageUrl = response.data.url;
       
-      setFormData({ ...formData, image: imageUrl });
-      setImagePreview(imageUrl);
+      toast.success('✅ Görsel yüklendi!');
+    } catch (error: any) {
+      toast.error('❌ ePreview(imageUrl);
     } catch (error: any) {
       alert('Görsel yüklenemedi');
     } finally {
@@ -573,9 +585,13 @@ export default function RestaurantMenu() {
                   </div>
 
                   <div className="flex gap-3 pt-4">
-                    <button
-                      type="submit"
-                      className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                    <bdisabled={submitting}
+                      className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      {submitting && (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      )}
+                      {submitting ? 'Kaydediliyor...' : (editingProduct ? 'Güncelle' : 'Oluştur')text-white rounded-lg hover:bg-blue-700 font-medium"
                     >
                       {editingProduct ? 'Güncelle' : 'Oluştur'}
                     </button>

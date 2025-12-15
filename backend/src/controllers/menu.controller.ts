@@ -127,6 +127,52 @@ export const deleteCategory = async (
   }
 };
 
+// Kategorileri yeniden sırala
+export const reorderCategories = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { categoryIdsInOrder } = req.body;
+    const restaurantId = req.user?.restaurantId;
+
+    if (!restaurantId) {
+      throw new ApiError(400, 'Restoran ID gerekli');
+    }
+
+    if (!Array.isArray(categoryIdsInOrder) || categoryIdsInOrder.length === 0) {
+      throw new ApiError(400, 'Kategori sırası gerekli');
+    }
+
+    // Tüm kategorilerin bu restorana ait olduğunu doğrula
+    const categories = await prisma.category.findMany({
+      where: {
+        id: { in: categoryIdsInOrder },
+        restaurantId,
+      },
+    });
+
+    if (categories.length !== categoryIdsInOrder.length) {
+      throw new ApiError(403, 'Bazı kategoriler bu restorana ait değil');
+    }
+
+    // Transaction ile tüm kategorileri güncelle
+    await prisma.$transaction(
+      categoryIdsInOrder.map((categoryId, index) =>
+        prisma.category.update({
+          where: { id: categoryId },
+          data: { order: index * 10 }, // 0, 10, 20, 30... (araya ekleme için boşluk)
+        })
+      )
+    );
+
+    sendSuccess(res, null, 'Kategori sıralaması güncellendi');
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Ürünleri listele
 export const getProducts = async (
   req: AuthRequest,
@@ -255,6 +301,7 @@ export const updateProduct = async (
       price,
       image,
       imageUrl,
+      categoryId,
       isNew,
       isPopular,
       isDiscount,
@@ -283,6 +330,17 @@ export const updateProduct = async (
       throw new ApiError(403, 'Bu ürünü güncelleme yetkiniz yok');
     }
 
+    // Eğer categoryId değişiyorsa, yeni kategori kontrolü
+    if (categoryId && categoryId !== product.categoryId) {
+      const newCategory = await prisma.category.findUnique({ where: { id: categoryId } });
+      if (!newCategory) {
+        throw new ApiError(404, 'Kategori bulunamadı');
+      }
+      if (req.user?.role === UserRole.RESTAURANT_ADMIN && newCategory.restaurantId !== req.user.restaurantId) {
+        throw new ApiError(403, 'Bu kategoriye ürün taşıma yetkiniz yok');
+      }
+    }
+
     const updatedProduct = await prisma.product.update({
       where: { id },
       data: {
@@ -291,6 +349,7 @@ export const updateProduct = async (
         price,
         image,
         imageUrl,
+        ...(categoryId && { categoryId }),
         isNew,
         isPopular,
         isDiscount,

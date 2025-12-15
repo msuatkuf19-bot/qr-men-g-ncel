@@ -224,6 +224,11 @@ class ApiClient {
     return data;
   }
 
+  async reorderCategories(categoryIdsInOrder: string[]) {
+    const { data } = await this.client.patch('/menu/categories/reorder', { categoryIdsInOrder });
+    return data;
+  }
+
   // Menu - Products
   async getProducts(categoryId?: string, restaurantId?: string) {
     const { data } = await this.client.get('/menu/products', {

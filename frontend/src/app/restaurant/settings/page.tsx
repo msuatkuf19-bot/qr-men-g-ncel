@@ -5,6 +5,8 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth.store';
+import WorkingHoursEditor from '@/components/WorkingHoursEditor';
+import toast from 'react-hot-toast';
 
 export default function RestaurantSettingsPage() {
   const { user } = useAuthStore();
@@ -130,10 +132,12 @@ export default function RestaurantSettingsPage() {
 
       await apiClient.updateRestaurant(restaurantId, formData);
 
+      toast.success('✅ Restoran bilgileri kaydedildi!');
       setMessage({ type: 'success', text: '✅ Restoran bilgileri kaydedildi!' });
       setTimeout(() => setMessage(null), 3000);
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Kaydetme başarısız';
+      toast.error(`❌ ${errorMessage}`);
       setMessage({ type: 'error', text: `❌ ${errorMessage}` });
     } finally {
       setSaving(false);
@@ -384,6 +388,36 @@ export default function RestaurantSettingsPage() {
                   rows={2}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200 text-gray-900 resize-none"
                 />
+              </div>
+            </div>
+          </div>
+
+          {/* Working Hours */}
+          <div className="bg-white rounded-2xl shadow-soft border border-gray-100/80 p-6 hover:shadow-soft-lg transition-shadow duration-200 lg:col-span-2">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center">
+                <svg className="w-5 h-5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h2 className="text-lg font-semibold text-gray-900">Çalışma Saatleri</h2>
+            </div>
+
+            <WorkingHoursEditor 
+              value={formData.workingHours}
+              onChange={(value) => setFormData({ ...formData, workingHours: value })}
+            />
+
+            <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4 mt-4">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <p className="text-sm text-blue-700">
+                  <strong>Bilgi:</strong> Çalışma saatleriniz QR menünüzde müşterilerinize gösterilecek. Her gün için ayrı saatler belirleyebilir veya kapalı olarak işaretleyebilirsiniz.
+                </p>
               </div>
             </div>
           </div>

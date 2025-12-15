@@ -4,6 +4,7 @@ import {
   createCategory,
   updateCategory,
   deleteCategory,
+  reorderCategories,
   getProducts,
   createProduct,
   updateProduct,
@@ -27,6 +28,7 @@ router.post(
 );
 router.put('/categories/:id', updateCategory);
 router.delete('/categories/:id', deleteCategory);
+router.patch('/categories/reorder', reorderCategories);
 
 // Ürünler
 router.get('/products', getProducts);
