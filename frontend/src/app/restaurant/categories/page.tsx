@@ -42,14 +42,15 @@ export default function RestaurantCategories() {
       setCategories(cats);
     } catch (error) {
       console.error('Kategoriler yüklenemedi:', error);
-      toast.error('❌ Kategoriler yüklenemedi'
-      console.error('Kategoriler yüklenemedi:', error);
+      toast.error('❌ Kategoriler yüklenemedi');
     } finally {
       setLoading(false);
     }
   };
 
-  cosetSubmitting(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
     
     try {
       const restaurantRes = await apiClient.getMyRestaurant();
@@ -69,13 +70,7 @@ export default function RestaurantCategories() {
       const errorMsg = error.response?.data?.message || 'Bir hata oluştu';
       toast.error(`❌ ${errorMsg}`);
     } finally {
-      setSubmitting(false
-    } catch (error: any) {
-      alert(error.response?.data?.message || 'Bir hata oluştu');
-    }toast.success('✅ Kategori silindi');
-      await loadCategories();
-    } catch (error: any) {
-      toast.error('❌ Silinemedi');
+      setSubmitting(false);
     }
   };
 
@@ -97,14 +92,19 @@ export default function RestaurantCategories() {
     } catch (error) {
       // Revert on error
       setCategories(categories);
-      toast.error('❌ Sıralama güncelle
+      toast.error('❌ Sıralama güncellenemedi');
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm('Bu kategoriyi silmek istediğinizden emin misiniz?')) return;
     try {
       await apiClient.deleteCategory(id);
-      loadCategories();
+      toast.success('✅ Kategori silindi');
+      await loadCategories();
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Silinemedi');
+      const errorMsg = error.response?.data?.message || 'Silinemedi';
+      toast.error(`❌ ${errorMsg}`);
     }
   };
 

@@ -105,17 +105,18 @@ export default function RestaurantMenu() {
       toast.error(`❌ ${errorMsg}`);
     } finally {
       setSubmitting(false);
-    }toast.success('✅ Ürün silindi');
-      await loadData();
-    } catch (error: any) {
-      toast.error('❌ 
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm('Bu ürünü silmek istediğinizden emin misiniz?')) return;
     try {
       await apiClient.deleteProduct(id);
-      loadData();
+      toast.success('✅ Ürün silindi');
+      await loadData();
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Silinemedi');
+      const errorMsg = error.response?.data?.message || 'Silinemedi';
+      toast.error(`❌ ${errorMsg}`);
     }
   };
 
@@ -123,11 +124,11 @@ export default function RestaurantMenu() {
     try {
       await apiClient.updateProduct(product.id, {
         isAvailable: !product.isAvailable,
+      });
       toast.success(product.isAvailable ? '📦 Ürün tükendi olarak işaretlendi' : '✅ Ürün mevcut olarak işaretlendi');
       await loadData();
     } catch (error: any) {
-      toast.error('❌ error: any) {
-      alert('Durum güncellenemedi');
+      toast.error('❌ Durum güncellenemedi');
     }
   };
 
@@ -140,11 +141,11 @@ export default function RestaurantMenu() {
       const response = await apiClient.uploadFile(file, 'product');
       const imageUrl = response.data.url;
       
+      setFormData({ ...formData, image: imageUrl });
+      setImagePreview(imageUrl);
       toast.success('✅ Görsel yüklendi!');
     } catch (error: any) {
-      toast.error('❌ ePreview(imageUrl);
-    } catch (error: any) {
-      alert('Görsel yüklenemedi');
+      toast.error('❌ Görsel yüklenemedi');
     } finally {
       setUploadingImage(false);
     }
