@@ -162,44 +162,46 @@ export default function RestaurantCategories() {
             {categories.map((category, index) => (
               <div
                 key={category.id}
-                className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition"
+                className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition relative"
               >
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-bold text-gray-900 mb-2">{category.name}</h3>
-                    {category.description && (
-                      <p className="text-sm text-gray-600 mb-3">{category.description}</p>
-                    )}
-                    <div className="flex items-center gap-4 text-sm text-gray-500">
-                      <span className="flex items-center gap-1">
-                        📦 <strong>{category._count?.products || 0}</strong> ürün
-                      </span>
-                      <span className="flex items-center gap-1">
-                        🔢 Sıra: <strong>{index + 1}</strong>
-                      </span>
-                    </div>
+                {/* Sıralama Butonları - Sağ Üst */}
+                <div className="absolute top-4 right-4 flex gap-1 bg-gray-50 rounded-lg p-1">
+                  <button
+                    onClick={() => moveCategory(index, 'up')}
+                    disabled={index === 0}
+                    className="p-2 text-blue-600 hover:bg-blue-50 rounded disabled:opacity-30 disabled:cursor-not-allowed transition"
+                    title="Yukarı taşı"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => moveCategory(index, 'down')}
+                    disabled={index === categories.length - 1}
+                    className="p-2 text-blue-600 hover:bg-blue-50 rounded disabled:opacity-30 disabled:cursor-not-allowed transition"
+                    title="Aşağı taşı"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                </div>
+
+                <div className="mb-4 pr-16">
+                  <div className="flex items-start gap-2 mb-2">
+                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-100 text-blue-700 font-bold text-sm flex-shrink-0">
+                      {index + 1}
+                    </span>
+                    <h3 className="text-lg font-bold text-gray-900">{category.name}</h3>
                   </div>
-                  <div className="flex flex-col gap-1 ml-2">
-                    <button
-                      onClick={() => moveCategory(index, 'up')}
-                      disabled={index === 0}
-                      className="p-1 text-gray-600 hover:bg-gray-100 rounded disabled:opacity-30 disabled:cursor-not-allowed"
-                      title="Yukarı taşı"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => moveCategory(index, 'down')}
-                      disabled={index === categories.length - 1}
-                      className="p-1 text-gray-600 hover:bg-gray-100 rounded disabled:opacity-30 disabled:cursor-not-allowed"
-                      title="Aşağı taşı"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
+                  {category.description && (
+                    <p className="text-sm text-gray-600 mb-3">{category.description}</p>
+                  )}
+                  <div className="flex items-center gap-4 text-sm text-gray-500">
+                    <span className="flex items-center gap-1">
+                      📦 <strong>{category._count?.products || 0}</strong> ürün
+                    </span>
                   </div>
                 </div>
                 <div className="flex gap-2 pt-4 border-t">
