@@ -320,11 +320,11 @@ export default function PublicMenu() {
                       {theme.showProductImages && (
                         <img
                           src={
-                            product.imageUrl 
-                              ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${product.imageUrl}`
-                              : product.image 
-                                ? (product.image.startsWith('http') ? product.image : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${product.image}`)
-                                : DEFAULT_PRODUCT_IMAGE
+                            (product.imageUrl || product.image)
+                              ? (product.imageUrl || product.image).startsWith('http')
+                                ? (product.imageUrl || product.image)
+                                : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${product.imageUrl || product.image}`
+                              : DEFAULT_PRODUCT_IMAGE
                           }
                           alt={product.name}
                           className={'w-24 h-24 object-cover flex-shrink-0 ' + cardRadiusClass}

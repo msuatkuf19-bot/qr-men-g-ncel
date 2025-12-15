@@ -256,9 +256,8 @@ export const createProduct = async (
       throw new ApiError(403, 'Bu kategoriye ürün ekleme yetkiniz yok');
     }
 
-    // Görsel yoksa default ürün görseli ata
-    const DEFAULT_PRODUCT_IMAGE = '/product-placeholder.jpg';
-    const finalImageUrl = imageUrl?.trim() || image?.trim() || DEFAULT_PRODUCT_IMAGE;
+    // Görsel varsa kaydet, yoksa boş bırak (frontend placeholder gösterecek)
+    const finalImageUrl = imageUrl?.trim() || image?.trim() || null;
 
     const product = await prisma.product.create({
       data: {
@@ -345,11 +344,10 @@ export const updateProduct = async (
       }
     }
 
-    // Görsel kaldırılırsa default ürün görseli ata
-    const DEFAULT_PRODUCT_IMAGE = '/product-placeholder.jpg';
+    // Görsel varsa kaydet, yoksa null (frontend placeholder gösterecek)
     const finalImageUrl = imageUrl !== undefined 
-      ? (imageUrl?.trim() || DEFAULT_PRODUCT_IMAGE)
-      : (image !== undefined ? (image?.trim() || DEFAULT_PRODUCT_IMAGE) : undefined);
+      ? (imageUrl?.trim() || null)
+      : (image !== undefined ? (image?.trim() || null) : undefined);
 
     const updatedProduct = await prisma.product.update({
       where: { id },

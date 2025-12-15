@@ -243,13 +243,11 @@ export default function RestaurantMenu() {
                     <tr key={product.id} className="border-b hover:bg-gray-50">
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-3">
-                          {product.image && (
-                            <img 
-                              src={product.image} 
-                              alt={product.name}
-                              className="w-16 h-16 rounded-lg object-cover border"
-                            />
-                          )}
+                          <img 
+                            src={product.image || product.imageUrl || DEFAULT_PRODUCT_IMAGE} 
+                            alt={product.name}
+                            className="w-16 h-16 rounded-lg object-cover border"
+                          />
                           <div>
                             <div className="font-medium text-gray-900">{product.name}</div>
                             {product.description && (
