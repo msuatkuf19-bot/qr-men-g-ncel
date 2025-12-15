@@ -47,8 +47,8 @@ export default function RestaurantMenu() {
   });
   const [imagePreview, setImagePreview] = useState<string>('');
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [restaurantId, setRestaurantId] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
+  const [restaurantId, setRestaurantId] = useState<string>('');
 
   useEffect(() => {
     loadData();
@@ -88,7 +88,6 @@ export default function RestaurantMenu() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    
     try {
       if (editingProduct) {
         await apiClient.updateProduct(editingProduct.id, formData);
@@ -194,9 +193,9 @@ export default function RestaurantMenu() {
     <ProtectedRoute allowedRoles={['RESTAURANT_ADMIN']}>
       <DashboardLayout title="🍽️ Menü Yönetimi">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="flex justify-between items-center mb-6">
           <div>
-            <p className="text-gray-600 text-sm sm:text-base">Menünüzdeki ürünleri yönetin</p>
+            <p className="text-gray-600">Menünüzdeki ürünleri yönetin</p>
           </div>
           <button
             onClick={() => {
@@ -207,7 +206,7 @@ export default function RestaurantMenu() {
               resetForm();
               setShowModal(true);
             }}
-            className="w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center justify-center gap-2 text-sm sm:text-base"
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center gap-2"
           >
             <span>➕</span>
             <span>Yeni Ürün</span>
@@ -228,71 +227,7 @@ export default function RestaurantMenu() {
               )}
             </div>
           ) : (
-            <>
-              {/* Mobile Card View */}
-              <div className="block md:hidden">
-                <div className="divide-y divide-gray-100">
-                  {products.map((product) => (
-                    <div key={product.id} className="p-4">
-                      <div className="flex gap-3 mb-3">
-                        <img 
-                          src={product.image || DEFAULT_PRODUCT_IMAGE} 
-                          alt={product.name}
-                          className="w-20 h-20 rounded-lg object-cover border flex-shrink-0"
-                          onError={(e) => {
-                            e.currentTarget.src = DEFAULT_PRODUCT_IMAGE;
-                          }}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium text-gray-900">{product.name}</div>
-                          {product.description && (
-                            <div className="text-sm text-gray-500 mt-1 line-clamp-2">
-                              {product.description}
-                            </div>
-                          )}
-                          <div className="flex flex-wrap items-center gap-2 mt-2">
-                            <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                              {product.category.name}
-                            </span>
-                            <button
-                              onClick={() => toggleAvailability(product)}
-                              className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                                product.isAvailable
-                                  ? 'bg-green-100 text-green-700'
-                                  : 'bg-red-100 text-red-700'
-                              }`}
-                            >
-                              {product.isAvailable ? 'Mevcut' : 'Tükendi'}
-                            </button>
-                          </div>
-                        </div>
-                        <div className="text-right flex-shrink-0">
-                          <span className="font-bold text-green-600 text-lg">
-                            {product.price.toFixed(2)} ₺
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => openEditModal(product)}
-                          className="flex-1 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm font-medium"
-                        >
-                          Düzenle
-                        </button>
-                        <button
-                          onClick={() => handleDelete(product.id)}
-                          className="flex-1 px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm font-medium"
-                        >
-                          Sil
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Desktop Table View */}
-              <div className="hidden md:block overflow-x-auto">
+            <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50 border-b">
                   <tr>
@@ -308,14 +243,13 @@ export default function RestaurantMenu() {
                     <tr key={product.id} className="border-b hover:bg-gray-50">
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-3">
-                          <img 
-                            src={product.image || DEFAULT_PRODUCT_IMAGE} 
-                            alt={product.name}
-                            className="w-16 h-16 rounded-lg object-cover border"
-                            onError={(e) => {
-                              e.currentTarget.src = DEFAULT_PRODUCT_IMAGE;
-                            }}
-                          />
+                          {product.image && (
+                            <img 
+                              src={product.image} 
+                              alt={product.name}
+                              className="w-16 h-16 rounded-lg object-cover border"
+                            />
+                          )}
                           <div>
                             <div className="font-medium text-gray-900">{product.name}</div>
                             {product.description && (
@@ -368,8 +302,7 @@ export default function RestaurantMenu() {
                   ))}
                 </tbody>
               </table>
-              </div>
-            </>
+            </div>
           )}
         </div>
 
@@ -589,13 +522,9 @@ export default function RestaurantMenu() {
                   </div>
 
                   <div className="flex gap-3 pt-4">
-                    <bdisabled={submitting}
-                      className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                    >
-                      {submitting && (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      )}
-                      {submitting ? 'Kaydediliyor...' : (editingProduct ? 'Güncelle' : 'Oluştur')text-white rounded-lg hover:bg-blue-700 font-medium"
+                    <button
+                      type="submit"
+                      className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
                     >
                       {editingProduct ? 'Güncelle' : 'Oluştur'}
                     </button>
