@@ -183,9 +183,15 @@ export const updateRestaurant = async (
 ) => {
   try {
     const { id } = req.params;
-    const { name, description, address, phone, email, logo, workingHours, themeColor, themeSettings } = req.body;
+    const { name, description, address, phone, email, logo, workingHours, themeColor, themeSettings, headerImage, instagramUrl, facebookUrl } = req.body;
 
-    console.log('Update restaurant request:', { id, userId: req.user?.userId, role: req.user?.role, hasThemeSettings: !!themeSettings });
+    console.log('Update restaurant request:', { 
+      id, 
+      userId: req.user?.userId, 
+      role: req.user?.role, 
+      hasThemeSettings: !!themeSettings,
+      workingHours: workingHours ? workingHours.substring(0, 50) + '...' : 'empty'
+    });
 
     // Restoran kontrolü
     const restaurant = await prisma.restaurant.findUnique({ where: { id } });
@@ -216,7 +222,10 @@ export const updateRestaurant = async (
         phone,
         email,
         logo,
-        workingHours,
+        headerImage,
+        instagramUrl,
+        facebookUrl,
+        ...(workingHours !== undefined && { workingHours }),
         themeColor,
         ...(themeSettingsString !== undefined && { themeSettings: themeSettingsString }),
       },

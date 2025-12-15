@@ -70,7 +70,9 @@ export default function WorkingHoursEditor({ value, onChange }: Props) {
       },
     };
     setHours(updated);
-    onChange(JSON.stringify(updated));
+    const jsonString = JSON.stringify(updated);
+    console.log('🕐 Working hours updated:', { day, field, value: val, jsonLength: jsonString.length });
+    onChange(jsonString);
   };
 
   return (

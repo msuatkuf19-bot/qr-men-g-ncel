@@ -130,6 +130,13 @@ export default function RestaurantSettingsPage() {
       setSaving(true);
       setMessage(null);
 
+      console.log('💾 Saving restaurant data:', {
+        restaurantId,
+        hasWorkingHours: !!formData.workingHours,
+        workingHoursLength: formData.workingHours?.length,
+        workingHoursPreview: formData.workingHours?.substring(0, 50)
+      });
+
       await apiClient.updateRestaurant(restaurantId, formData);
 
       toast.success('✅ Restoran bilgileri kaydedildi!');
@@ -139,6 +146,7 @@ export default function RestaurantSettingsPage() {
       const errorMessage = error.response?.data?.message || 'Kaydetme başarısız';
       toast.error(`❌ ${errorMessage}`);
       setMessage({ type: 'error', text: `❌ ${errorMessage}` });
+      console.error('❌ Save error:', error);
     } finally {
       setSaving(false);
     }
