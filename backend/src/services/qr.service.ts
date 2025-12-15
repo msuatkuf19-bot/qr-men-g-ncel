@@ -1,6 +1,7 @@
 import QRCode from 'qrcode';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { createCanvas, loadImage } from 'canvas';
+import * as path from 'path';
 import prisma from '../config/database';
 import { ApiError } from '../utils/response';
 import { logger } from './logger.service';
@@ -124,9 +125,11 @@ export class QRCodeService {
         if (restaurant.logo) {
           logoPath = `${process.cwd()}/uploads${restaurant.logo}`;
         } else {
-          // Default logo olarak benmedya.png kullan
-          logoPath = `${process.cwd()}/frontend/public/benmedya.png`;
+          // Default logo olarak benmedya.png kullan (frontend/public klasöründe)
+          logoPath = path.join(process.cwd(), '..', 'frontend', 'public', 'benmedya.png');
         }
+        
+        logger.info('QR için logo yolu belirlendi', { logoPath, hasRestaurantLogo: !!restaurant.logo });
         
         qrImage = await this.addLogoToQR(qrImage, logoPath);
       }
