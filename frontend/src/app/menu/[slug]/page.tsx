@@ -5,6 +5,7 @@ import { useParams, useSearchParams } from 'next/navigation';
 import { apiClient } from '@/lib/api-client';
 import { buildTheme, getCardRadiusClass, getHeaderBackgroundStyle } from '@/lib/theme-utils';
 import { getTodayWorkingHours, isRestaurantOpen } from '@/lib/working-hours-utils';
+import { DEFAULT_PRODUCT_IMAGE } from '@/lib/constants';
 
 interface Product {
   id: string;
@@ -355,12 +356,12 @@ export default function PublicMenu() {
                             ? product.image
                             : (product.imageUrl || product.image)
                             ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${product.imageUrl || product.image}`
-                            : '/ürün resmi.jpg'
+                            : DEFAULT_PRODUCT_IMAGE
                         }
                         alt={product.name}
                         className={'w-24 h-24 object-cover flex-shrink-0 ' + cardRadiusClass}
                         onError={(e) => {
-                          e.currentTarget.src = '/ürün resmi.jpg';
+                          e.currentTarget.src = DEFAULT_PRODUCT_IMAGE;
                         }}
                       />
                       <div className="flex-1">

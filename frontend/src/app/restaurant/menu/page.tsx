@@ -5,6 +5,7 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 import { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
 import toast from 'react-hot-toast';
+import { DEFAULT_PRODUCT_IMAGE } from '@/lib/constants';
 
 interface Product {
   id: string;
@@ -165,7 +166,7 @@ export default function RestaurantMenu() {
       isGlutenFree: product.isGlutenFree || false,
       isSpicy: product.isSpicy || false,
     });
-    setImagePreview(product.image || '/ürün resmi.jpg');
+    setImagePreview(product.image || DEFAULT_PRODUCT_IMAGE);
     setShowModal(true);
   };
 
@@ -234,11 +235,11 @@ export default function RestaurantMenu() {
                     <div key={product.id} className="p-4">
                       <div className="flex gap-3 mb-3">
                         <img 
-                          src={product.image || '/ürün resmi.jpg'} 
+                          src={product.image || DEFAULT_PRODUCT_IMAGE} 
                           alt={product.name}
                           className="w-20 h-20 rounded-lg object-cover border flex-shrink-0"
                           onError={(e) => {
-                            e.currentTarget.src = '/ürün resmi.jpg';
+                            e.currentTarget.src = DEFAULT_PRODUCT_IMAGE;
                           }}
                         />
                         <div className="flex-1 min-w-0">
@@ -307,11 +308,11 @@ export default function RestaurantMenu() {
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-3">
                           <img 
-                            src={product.image || '/ürün resmi.jpg'} 
+                            src={product.image || DEFAULT_PRODUCT_IMAGE} 
                             alt={product.name}
                             className="w-16 h-16 rounded-lg object-cover border"
                             onError={(e) => {
-                              e.currentTarget.src = '/ürün resmi.jpg';
+                              e.currentTarget.src = DEFAULT_PRODUCT_IMAGE;
                             }}
                           />
                           <div>
