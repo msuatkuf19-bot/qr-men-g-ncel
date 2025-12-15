@@ -38,6 +38,7 @@ export default function RestaurantCategories() {
       setLoading(true);
       const restaurantRes = await apiClient.getMyRestaurant();
       const restaurant = restaurantRes.data;
+      const categoriesRes = await apiClient.getCategories();
       const cats = (categoriesRes.data || []).sort((a: Category, b: Category) => (a.order || 0) - (b.order || 0));
       setCategories(cats);
     } catch (error) {

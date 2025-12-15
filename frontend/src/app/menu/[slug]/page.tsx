@@ -45,7 +45,6 @@ interface Restaurant {
   facebookUrl?: string;
   themeColor?: string;
   themeSettings?: string;
-  workingHours?: string;
 }
 
 export default function PublicMenu() {
@@ -150,14 +149,11 @@ export default function PublicMenu() {
             </button>
 
             <div className="text-center">
-              <div className="flex justify-center mb-4">
-                <RestaurantLogo 
-                  name={restaurant.name}
-                  logoUrl={restaurant.logo?.startsWith('http') ? restaurant.logo : restaurant.logo ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${restaurant.logo}` : undefined}
-                  size="lg"
-                  className="shadow-lg"
-                />
-              </div>
+              {restaurant.logo && (
+                <div className="w-24 h-24 mx-auto mb-4 rounded-2xl overflow-hidden shadow-lg">
+                  <img src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${restaurant.logo}`} alt={restaurant.name} className="w-full h-full object-cover" />
+                </div>
+              )}
               <h2 className="text-2xl font-bold text-gray-900 mb-2">{restaurant.name} - Hoşgeldiniz!</h2>
               <p className="text-lg text-gray-600">Afiyet olsun.</p>
               {tableNumber && (
@@ -176,7 +172,7 @@ export default function PublicMenu() {
         style={
           restaurant.headerImage
             ? {
-                backgroundImage: `url(${restaurant.headerImage.startsWith('http') ? restaurant.headerImage : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${restaurant.headerImage}`})`,
+                backgroundImage: `url(${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${restaurant.headerImage})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 minHeight: '240px',
@@ -190,12 +186,11 @@ export default function PublicMenu() {
         <div className="max-w-4xl mx-auto px-4 py-8 relative z-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <RestaurantLogo 
-                name={restaurant.name}
-                logoUrl={restaurant.logo?.startsWith('http') ? restaurant.logo : restaurant.logo ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${restaurant.logo}` : undefined}
-                size="md"
-                className="shadow-md border-2 border-white/20"
-              />
+              {restaurant.logo && (
+                <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-md border-2 border-white/20">
+                  <img src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${restaurant.logo}`} alt={restaurant.name} className="w-full h-full object-cover" />
+                </div>
+              )}
               <div>
                 <h1 
                   className="text-2xl font-bold drop-shadow-lg"
@@ -234,42 +229,19 @@ export default function PublicMenu() {
             )}
           </div>
 
-          {/* CclassName="mt-4 flex items-center gap-4 flex-wrap">
-            {restaurant.workingHours && (
-              <div 
-                className="flex items-center gap-2 text-sm drop-shadow"
-                style={{
-                  color: buildTheme(restaurant.themeSettings).headerBackgroundType === 'gradient' || buildTheme(restaurant.themeSettings).showHeaderOverlay
-                    ? '#ffffff'
-                    : '#6B7280'
-                }}
-              >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"/>
-                </svg>
-                <span>{getTodayWorkingHours(restaurant.workingHours)}</span>
-                {isRestaurantOpen(restaurant.workingHours) && (
-                  <span className="ml-2 px-2 py-0.5 bg-green-500 text-white text-xs rounded-full font-medium">
-                    Açık
-                  </span>
-                )}
-              </div>
-            )}
-            {restaurant.phone && (
-              <div 
-                className="flex items-center gap-2 text-sm drop-shadow"
-                style={{
-                  color: buildTheme(restaurant.themeSettings).headerBackgroundType === 'gradient' || buildTheme(restaurant.themeSettings).showHeaderOverlay
-                    ? '#ffffff'
-                    : '#6B7280'
-                }}
-              >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
-                </svg>
-                <span>{restaurant.phone}</span>
-              </div>
-            )}
+          {/* Contact Info */}
+          <div 
+            className="mt-4 flex items-center gap-2 text-sm drop-shadow"
+            style={{
+              color: buildTheme(restaurant.themeSettings).headerBackgroundType === 'gradient' || buildTheme(restaurant.themeSettings).showHeaderOverlay
+                ? '#ffffff'
+                : '#6B7280'
+            }}
+          >
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"/>
+            </svg>
+            <span>10:30 - 20:00</span>
           </div>
         </div>
       </div>
@@ -344,23 +316,23 @@ export default function PublicMenu() {
                     }}
                   >
                     <div className="flex gap-4 p-4">
-                      <img
-                        src={
-                          // Eğer URL http ile başlıyorsa (Cloudinary), direkt kullan
-                          (product.imageUrl && product.imageUrl.startsWith('http'))
-                            ? product.imageUrl
-                            : (product.image && product.image.startsWith('http'))
-                            ? product.image
-                            : (product.imageUrl || product.image)
-                            ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${product.imageUrl || product.image}`
-                            : DEFAULT_PRODUCT_IMAGE
-                        }
-                        alt={product.name}
-                        className={'w-24 h-24 object-cover flex-shrink-0 ' + cardRadiusClass}
-                        onError={(e) => {
-                          e.currentTarget.src = DEFAULT_PRODUCT_IMAGE;
-                        }}
-                      />
+                      {theme.showProductImages && (product.imageUrl || product.image) ? (
+                        <img
+                          src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${product.imageUrl || product.image}`}
+                          alt={product.name}
+                          className={'w-24 h-24 object-cover flex-shrink-0 ' + cardRadiusClass}
+                          onError={(e) => {
+                            console.error('Image load failed:', product.name, product.imageUrl || product.image);
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      ) : theme.showProductImages ? (
+                        <div className={'w-24 h-24 bg-gray-200 flex items-center justify-center flex-shrink-0 ' + cardRadiusClass}>
+                          <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                      ) : null}
                       <div className="flex-1">
                         <div className="flex items-start justify-between">
                           <h3 
