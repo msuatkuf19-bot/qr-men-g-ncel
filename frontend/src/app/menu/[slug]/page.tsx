@@ -272,7 +272,6 @@ export default function PublicMenu() {
                 <span>{restaurant.phone}</span>
               </div>
             )}
-            <span>10:30 - 20:00</span>
           </div>
         </div>
       </div>
