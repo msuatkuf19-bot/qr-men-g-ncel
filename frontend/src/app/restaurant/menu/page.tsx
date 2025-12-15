@@ -165,7 +165,7 @@ export default function RestaurantMenu() {
       isGlutenFree: product.isGlutenFree || false,
       isSpicy: product.isSpicy || false,
     });
-    setImagePreview(product.image || '');
+    setImagePreview(product.image || '/ürün resmi.jpg');
     setShowModal(true);
   };
 
