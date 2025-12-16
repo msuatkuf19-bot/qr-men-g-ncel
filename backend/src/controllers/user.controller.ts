@@ -3,6 +3,7 @@ import prisma from '../config/database';
 import { ApiError, sendSuccess } from '../utils/response';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { hashPassword } from '../utils/bcrypt';
+import { sendWelcomeKvkkEmail } from '../lib/email/sendWelcomeKvkk';
 
 // SQLite için UserRole string sabitleri
 const UserRole = {
@@ -107,7 +108,35 @@ export const createUser = async (
       },
     });
 
-    sendSuccess(res, user, 'Kullanıcı başarıyla oluşturuldu', 201);
+    // Hoş geldiniz + KVKK maili gönder (async, hata durumunda kullanıcı kaydı yine başarılı)
+    let emailSent = false;
+    try {
+      const appUrl = process.env.APP_URL || 'http://localhost:3000';
+      const emailResult = await sendWelcomeKvkkEmail({
+        to: user.email,
+        name: user.name || '',
+        loginEmail: user.email,
+        loginUrl: `${appUrl}/login`,
+        // tempPassword: password, // Güvenlik için şifreyi göndermiyoruz
+        includePassword: false,
+      });
+      emailSent = emailResult.success;
+      
+      if (!emailSent) {
+        console.warn('⚠️  Welcome email could not be sent:', emailResult.error);
+      }
+    } catch (emailError: any) {
+      console.error('❌ Welcome email error:', emailError.message);
+    }
+
+    sendSuccess(
+      res, 
+      { ...user, emailSent }, 
+      emailSent 
+        ? 'Kullanıcı başarıyla oluşturuldu ve hoş geldiniz e-postası gönderildi' 
+        : 'Kullanıcı başarıyla oluşturuldu (e-posta gönderilemedi)',
+      201
+    );
   } catch (error) {
     next(error);
   }
