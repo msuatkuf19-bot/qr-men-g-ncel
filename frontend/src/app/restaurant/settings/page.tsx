@@ -386,21 +386,25 @@ export default function RestaurantSettingsPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    Adres
+                    Google Maps Linki
                   </span>
                 </label>
-                <textarea
+                <input
+                  type="url"
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  rows={2}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200 text-gray-900 resize-none"
+                  placeholder="https://maps.google.com/..."
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200 text-gray-900"
                 />
+                <p className="mt-1 text-xs text-gray-500">
+                  Google Maps'ten konumunuzun linkini kopyalayıp buraya yapıştırın
+                </p>
               </div>
             </div>
           </div>
 
           {/* Working Hours */}
-          <div className="bg-white rounded-2xl shadow-soft border border-gray-100/80 p-6 hover:shadow-soft-lg transition-shadow duration-200 lg:col-span-2">
+          <div className="bg-white rounded-2xl shadow-soft border border-gray-100/80 p-6 hover:shadow-soft-lg transition-shadow duration-200">
             <div className="flex items-center gap-3 mb-5">
               <div className="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center">
                 <svg className="w-5 h-5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -410,20 +414,22 @@ export default function RestaurantSettingsPage() {
               <h2 className="text-lg font-semibold text-gray-900">Çalışma Saatleri</h2>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Çalışma Saatleri
-              </label>
-              <input
-                type="text"
-                value={formData.workingHours}
-                onChange={(e) => setFormData({ ...formData, workingHours: e.target.value })}
-                placeholder="Örn: 10:30 - 20:00"
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition"
-              />
-              <p className="mt-2 text-sm text-gray-500">
-                Çalışma saatlerinizi girin (Örn: 10:30 - 20:00 veya Hafta İçi: 10:00 - 22:00)
-              </p>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Çalışma Saatleri Metni
+                </label>
+                <input
+                  type="text"
+                  value={formData.workingHours}
+                  onChange={(e) => setFormData({ ...formData, workingHours: e.target.value })}
+                  placeholder="Örn: 10:30 - 20:00 veya Hafta İçi: 08:00 - 22:00"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200 text-gray-900"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Müşterilere gösterilecek çalışma saatleri metni (Menüde görünür)
+                </p>
+              </div>
             </div>
           </div>
 
