@@ -392,10 +392,12 @@ export default function MenuAppearancePage() {
                         <input
                           type="text"
                           value={themeSettings.welcomeTitle || 'Hoşgeldiniz!'}
-                          onChange={(e) => setThemeSettings({ ...themeSettings, welcomeTitle: e.target.value })}
+                          onChange={(e) => setThemeSettings({ ...themeSettings, welcomeTitle: e.target.value.slice(0, 30) })}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           placeholder="Hoşgeldiniz!"
+                          maxLength={30}
                         />
+                        <p className="mt-1 text-xs text-gray-500">{(themeSettings.welcomeTitle || '').length}/30 karakter</p>
                       </div>
 
                       <div>
@@ -405,10 +407,12 @@ export default function MenuAppearancePage() {
                         <input
                           type="text"
                           value={themeSettings.welcomeMessage || 'Afiyet olsun.'}
-                          onChange={(e) => setThemeSettings({ ...themeSettings, welcomeMessage: e.target.value })}
+                          onChange={(e) => setThemeSettings({ ...themeSettings, welcomeMessage: e.target.value.slice(0, 50) })}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           placeholder="Afiyet olsun."
+                          maxLength={50}
                         />
+                        <p className="mt-1 text-xs text-gray-500">{(themeSettings.welcomeMessage || '').length}/50 karakter</p>
                       </div>
 
                       <div>

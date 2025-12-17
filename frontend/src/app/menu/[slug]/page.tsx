@@ -64,6 +64,16 @@ export default function PublicMenu() {
     loadMenu();
   }, [slug, tableNumber]);
 
+  // Auto close welcome popup after 3 seconds
+  useEffect(() => {
+    if (showWelcome && restaurant && buildTheme(restaurant.themeSettings).showWelcomePopup !== false) {
+      const autoCloseTimer = setTimeout(() => {
+        setShowWelcome(false);
+      }, 3000);
+      return () => clearTimeout(autoCloseTimer);
+    }
+  }, [showWelcome, restaurant]);
+
   const loadMenu = async () => {
     try {
       setLoading(true);
@@ -140,38 +150,33 @@ export default function PublicMenu() {
       {showWelcome && buildTheme(restaurant.themeSettings).showWelcomePopup !== false && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fadeIn">
           <div 
-            className="rounded-3xl shadow-2xl max-w-md w-full p-8 relative animate-scaleIn"
+            className="rounded-3xl shadow-2xl max-w-md w-full p-6 relative animate-scaleIn"
             style={{ backgroundColor: buildTheme(restaurant.themeSettings).welcomeBackgroundColor || '#FFFFFF' }}
           >
-            <button
-              onClick={() => setShowWelcome(false)}
-              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition"
-            >
-              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
 
             <div className="text-center">
-              <div className="mx-auto mb-4">
+              <div className="flex items-center justify-center gap-3 mb-4">
                 <RestaurantLogo 
                   name={restaurant.name}
                   logoUrl={restaurant.logo ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${restaurant.logo}` : null}
-                  size="xl"
+                  size="lg"
                   className="shadow-lg"
                 />
+                <h3 className="text-xl font-bold" style={{ color: buildTheme(restaurant.themeSettings).welcomeTitleColor || '#1F2937' }}>
+                  {restaurant.name}
+                </h3>
               </div>
               <h2 
-                className="text-2xl font-bold mb-2"
+                className="text-xl font-bold mb-2"
                 style={{ color: buildTheme(restaurant.themeSettings).welcomeTitleColor || '#1F2937' }}
               >
-                {restaurant.name} - {buildTheme(restaurant.themeSettings).welcomeTitle || 'Hoşgeldiniz!'}
+                {(buildTheme(restaurant.themeSettings).welcomeTitle || 'Hoşgeldiniz!').slice(0, 30)}
               </h2>
               <p 
-                className="text-lg"
+                className="text-base"
                 style={{ color: buildTheme(restaurant.themeSettings).welcomeMessageColor || '#6B7280' }}
               >
-                {buildTheme(restaurant.themeSettings).welcomeMessage || 'Afiyet olsun.'}
+                {(buildTheme(restaurant.themeSettings).welcomeMessage || 'Afiyet olsun.').slice(0, 50)}
               </p>
               {tableNumber && (
                 <div className="mt-4 inline-block px-4 py-2 bg-blue-100 text-blue-700 rounded-full font-medium">
