@@ -8,12 +8,13 @@
  * Development ortamında query logları aktif, production'da sadece hata logları
  */
 
-import { PrismaClient } from '@prisma/client';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { PrismaClient } = require('@prisma/client');
 
 // Global tip tanımlaması - Hot reload sırasında prisma instance'ını korumak için
 declare global {
   // eslint-disable-next-line no-var
-  var prisma: PrismaClient | undefined;
+  var prisma: any;
 }
 
 /**
