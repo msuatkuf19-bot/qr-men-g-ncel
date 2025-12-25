@@ -8,9 +8,9 @@
   },
   "scripts": {
     "dev": "nodemon --exec ts-node src/server.ts",
-    "build": "npx prisma generate && npx tsc",
+    "build": "npx prisma generate && ./node_modules/.bin/tsc",
     "start": "node dist/server.js",
-    "vercel-build": "npx prisma generate && npx tsc",
+    "vercel-build": "npx prisma generate && ./node_modules/.bin/tsc",
     "postinstall": "prisma generate",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate deploy",
