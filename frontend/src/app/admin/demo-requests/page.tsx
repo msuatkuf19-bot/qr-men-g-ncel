@@ -2,9 +2,11 @@
 
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { apiClient } from '@/lib/api-client';
 import { ClipboardList, MessageCircle, X } from 'lucide-react';
+import { normalizeTRPhoneToWaDigits, buildDemoWhatsAppMessage } from '@/utils/phone';
+import toast from 'react-hot-toast';
 
 type DemoRequestStatus = 'PENDING' | 'CONTACTED' | 'DEMO_CREATED' | 'CANCELLED';
 
@@ -34,7 +36,17 @@ const statusBadge: Record<DemoRequestStatus, string> = {
   CANCELLED: 'bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-200/80',
 };
 
-const toWaNumber = (phone: string) => phone.replace(/\D/g, '');
+// WhatsApp ile iletişime geç - hazır mesaj ile
+const openWhatsApp = (phone: string, fullName: string, restaurantName: string) => {
+  const digits = normalizeTRPhoneToWaDigits(phone);
+  if (!digits) {
+    toast.error('Geçersiz telefon numarası', { duration: 2000 });
+    return;
+  }
+  const message = buildDemoWhatsAppMessage(fullName, restaurantName);
+  const url = `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
+  window.open(url, '_blank', 'noopener,noreferrer');
+};
 
 export default function AdminDemoRequests() {
   const [items, setItems] = useState<DemoRequest[]>([]);
@@ -118,7 +130,6 @@ export default function AdminDemoRequests() {
               {/* Mobile */}
               <div className="block lg:hidden divide-y divide-slate-200/70">
                 {items.map((r) => {
-                  const wa = toWaNumber(r.phone);
                   return (
                     <div key={r.id} className="p-4 sm:p-5 hover:bg-slate-50/70 transition-colors">
                       <div className="flex items-start justify-between gap-3">
@@ -132,15 +143,14 @@ export default function AdminDemoRequests() {
                       </div>
 
                       <div className="mt-3 flex flex-wrap items-center gap-2">
-                        <a
-                          href={wa ? `https://wa.me/${wa}` : undefined}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50"
+                        <button
+                          type="button"
+                          onClick={() => openWhatsApp(r.phone, r.fullName, r.restaurantName)}
+                          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer transition-colors"
                         >
                           <MessageCircle className="h-4 w-4 text-emerald-600" strokeWidth={2} aria-hidden="true" />
                           {r.phone}
-                        </a>
+                        </button>
                         <span className="text-[12px] text-slate-500">
                           {r.restaurantType || '—'} • {r.tableCount || 0} masa
                         </span>
@@ -190,7 +200,6 @@ export default function AdminDemoRequests() {
                   </thead>
                   <tbody>
                     {items.map((r) => {
-                      const wa = toWaNumber(r.phone);
                       return (
                         <tr key={r.id} className="border-b border-slate-200/60 hover:bg-slate-50/70 transition-colors">
                           <td className="py-4 px-6">
@@ -199,15 +208,14 @@ export default function AdminDemoRequests() {
                           </td>
                           <td className="py-4 px-6 text-[13px] text-slate-700">{r.restaurantName}</td>
                           <td className="py-4 px-6">
-                            <a
-                              href={wa ? `https://wa.me/${wa}` : undefined}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] font-semibold text-slate-700 hover:bg-slate-50"
+                            <button
+                              type="button"
+                              onClick={() => openWhatsApp(r.phone, r.fullName, r.restaurantName)}
+                              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer transition-colors"
                             >
                               <MessageCircle className="h-4 w-4 text-emerald-600" strokeWidth={2} aria-hidden="true" />
                               {r.phone}
-                            </a>
+                            </button>
                           </td>
                           <td className="py-4 px-6 text-[13px] text-slate-700">{r.restaurantType || '—'}</td>
                           <td className="py-4 px-6 text-center text-[13px] text-slate-700">{r.tableCount || 0}</td>
@@ -298,15 +306,14 @@ export default function AdminDemoRequests() {
               </div>
 
               <div className="px-5 py-4 border-t border-slate-200/70 flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
-                <a
-                  href={`https://wa.me/${toWaNumber(selected.phone)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="h-11 px-4 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition-colors text-sm font-semibold inline-flex items-center justify-center gap-2"
+                <button
+                  type="button"
+                  onClick={() => openWhatsApp(selected.phone, selected.fullName, selected.restaurantName)}
+                  className="h-11 px-4 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition-colors text-sm font-semibold inline-flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <MessageCircle className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
                   WhatsApp'tan yaz
-                </a>
+                </button>
 
                 <div className="flex gap-2">
                   <select

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useCallback, memo } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { apiClient } from '@/lib/api-client';
 import { buildTheme, getCardRadiusClass, getHeaderBackgroundStyle } from '@/lib/theme-utils';
@@ -60,6 +60,46 @@ export default function PublicMenu() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showWelcome, setShowWelcome] = useState(true);
 
+  // Memoized theme - restaurant değişmedikçe yeniden hesaplanmaz
+  const theme = useMemo(() => 
+    restaurant ? buildTheme(restaurant.themeSettings) : null
+  , [restaurant?.themeSettings]);
+
+  // Memoized card radius class
+  const cardRadiusClass = useMemo(() => 
+    theme ? getCardRadiusClass(theme.cardRadius) : ''
+  , [theme?.cardRadius]);
+
+  // Memoized filtered categories - selectedCategory veya categories değişmedikçe yeniden hesaplanmaz
+  const filteredCategories = useMemo(() => 
+    selectedCategory === 'all' 
+      ? categories 
+      : categories.filter(cat => cat.id === selectedCategory)
+  , [selectedCategory, categories]);
+
+  // Memoized logo URL
+  const logoUrl = useMemo(() => {
+    if (!restaurant?.logo) return null;
+    return restaurant.logo.startsWith('http') 
+      ? restaurant.logo 
+      : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${restaurant.logo}`;
+  }, [restaurant?.logo]);
+
+  // Category select handler - useCallback ile stabilize
+  const handleCategorySelect = useCallback((categoryId: string) => {
+    setSelectedCategory(categoryId);
+  }, []);
+
+  // Product click handler - analytics tracking
+  const handleProductClick = useCallback((productId: string, restaurantId: string) => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    fetch(apiUrl + '/api/analytics/product-view', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ productId, restaurantId }),
+    }).catch(() => {});
+  }, []);
+
   useEffect(() => {
     loadMenu();
   }, [slug, tableNumber]);
@@ -77,22 +117,8 @@ export default function PublicMenu() {
   const loadMenu = async () => {
     try {
       setLoading(true);
-      console.log('Loading menu for slug:', slug);
       const response = await apiClient.getPublicMenu(slug, tableNumber || undefined);
-      console.log('API Response:', response);
-      console.log('🖼️ Categories with products:', response.data.categories);
-      response.data.categories?.forEach((cat: any) => {
-        console.log(`📂 Category "${cat.name}" products:`, cat.products);
-        cat.products?.forEach((p: any) => {
-          console.log(`  - ${p.name}: image=${p.image}, imageUrl=${p.imageUrl}`);
-        });
-      });
       const restaurantData = response.data.restaurant;
-      console.log('Restaurant Data:', restaurantData);
-      console.log('Restaurant Logo:', restaurantData.logo);
-      console.log('Final Logo URL:', restaurantData.logo ? 
-        (restaurantData.logo.startsWith('http') ? restaurantData.logo : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${restaurantData.logo}`) 
-        : 'No logo');
       setRestaurant(restaurantData);
       setCategories(response.data.categories || []);
       
@@ -108,20 +134,18 @@ export default function PublicMenu() {
             referrer: document.referrer || null,
           }),
         });
-      } catch (err) {
-        console.log('Analytics tracking failed:', err);
+      } catch {
+        // Analytics hatası sessizce geçilir
       }
     } catch (error: any) {
-      console.error('Menü yüklenemedi:', error);
-      console.error('Error details:', error.response?.data || error.message);
+      // Production'da error boundary ile yönetilir
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Menü yüklenemedi:', error);
+      }
     } finally {
       setLoading(false);
     }
   };
-
-  const filteredCategories = selectedCategory === 'all' 
-    ? categories 
-    : categories.filter(cat => cat.id === selectedCategory);
 
   if (loading) {
     return (
@@ -134,7 +158,7 @@ export default function PublicMenu() {
     );
   }
 
-  if (!restaurant) {
+  if (!restaurant || !theme) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -145,44 +169,39 @@ export default function PublicMenu() {
     );
   }
 
-  const theme = buildTheme(restaurant?.themeSettings);
-  const cardRadiusClass = getCardRadiusClass(theme.cardRadius);
-
   return (
     <div className="min-h-screen relative" style={{ backgroundColor: theme.backgroundColor }}>
       {/* Welcome Popup */}
-      {showWelcome && buildTheme(restaurant.themeSettings).showWelcomePopup !== false && (
+      {showWelcome && theme.showWelcomePopup !== false && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fadeIn">
           <div 
             className="rounded-3xl shadow-2xl max-w-md w-full p-6 relative animate-scaleIn"
-            style={{ backgroundColor: buildTheme(restaurant.themeSettings).welcomeBackgroundColor || '#FFFFFF' }}
+            style={{ backgroundColor: theme.welcomeBackgroundColor || '#FFFFFF' }}
           >
 
             <div className="text-center">
               <div className="flex items-center justify-center gap-3 mb-4">
                 <RestaurantLogo 
                   name={restaurant.name}
-                  logoUrl={restaurant.logo ? 
-                    (restaurant.logo.startsWith('http') ? restaurant.logo : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${restaurant.logo}`) 
-                    : null}
+                  logoUrl={logoUrl}
                   size="lg"
                   className="shadow-lg"
                 />
-                <h3 className="text-xl font-bold" style={{ color: buildTheme(restaurant.themeSettings).welcomeTitleColor || '#1F2937' }}>
+                <h3 className="text-xl font-bold" style={{ color: theme.welcomeTitleColor || '#1F2937' }}>
                   {restaurant.name}
                 </h3>
               </div>
               <h2 
                 className="text-xl font-bold mb-2"
-                style={{ color: buildTheme(restaurant.themeSettings).welcomeTitleColor || '#1F2937' }}
+                style={{ color: theme.welcomeTitleColor || '#1F2937' }}
               >
-                {(buildTheme(restaurant.themeSettings).welcomeTitle || 'Hoşgeldiniz!').slice(0, 30)}
+                {(theme.welcomeTitle || 'Hoşgeldiniz!').slice(0, 30)}
               </h2>
               <p 
                 className="text-base"
-                style={{ color: buildTheme(restaurant.themeSettings).welcomeMessageColor || '#6B7280' }}
+                style={{ color: theme.welcomeMessageColor || '#6B7280' }}
               >
-                {(buildTheme(restaurant.themeSettings).welcomeMessage || 'Afiyet olsun.').slice(0, 50)}
+                {(theme.welcomeMessage || 'Afiyet olsun.').slice(0, 50)}
               </p>
               {tableNumber && (
                 <div className="mt-4 inline-block px-4 py-2 bg-blue-100 text-blue-700 rounded-full font-medium">
@@ -205,10 +224,10 @@ export default function PublicMenu() {
                 backgroundPosition: 'center',
                 minHeight: '240px',
               }
-            : getHeaderBackgroundStyle(buildTheme(restaurant.themeSettings))
+            : getHeaderBackgroundStyle(theme)
         }
       >
-        {(buildTheme(restaurant.themeSettings).showHeaderOverlay || restaurant.headerImage) && (
+        {(theme.showHeaderOverlay || restaurant.headerImage) && (
           <div className="absolute inset-0 bg-black/40"></div>
         )}
         <div className="max-w-4xl mx-auto px-4 py-8 relative z-10">
@@ -216,9 +235,7 @@ export default function PublicMenu() {
             <div className="flex items-center gap-4">
               <RestaurantLogo 
                 name={restaurant.name}
-                logoUrl={restaurant.logo ? 
-                  (restaurant.logo.startsWith('http') ? restaurant.logo : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${restaurant.logo}`) 
-                  : null}
+                logoUrl={logoUrl}
                 size="lg"
                 className="shadow-md border-2 border-white/20"
               />
@@ -226,9 +243,9 @@ export default function PublicMenu() {
                 <h1 
                   className="text-2xl font-bold drop-shadow-lg"
                   style={{
-                    color: buildTheme(restaurant.themeSettings).headerBackgroundType === 'gradient' || buildTheme(restaurant.themeSettings).showHeaderOverlay
+                    color: theme.headerBackgroundType === 'gradient' || theme.showHeaderOverlay
                       ? '#ffffff'
-                      : buildTheme(restaurant.themeSettings).primaryColor
+                      : theme.primaryColor
                   }}
                 >
                   {restaurant.name}
@@ -237,7 +254,7 @@ export default function PublicMenu() {
                   <p 
                     className="text-sm drop-shadow"
                     style={{
-                      color: buildTheme(restaurant.themeSettings).headerBackgroundType === 'gradient' || buildTheme(restaurant.themeSettings).showHeaderOverlay
+                      color: theme.headerBackgroundType === 'gradient' || theme.showHeaderOverlay
                         ? '#ffffff'
                         : '#6B7280'
                     }}
@@ -251,7 +268,7 @@ export default function PublicMenu() {
               <div 
                 className="hidden sm:block px-4 py-2 rounded-full font-medium shadow"
                 style={{
-                  backgroundColor: buildTheme(restaurant.themeSettings).primaryColor,
+                  backgroundColor: theme.primaryColor,
                   color: '#ffffff'
                 }}
               >
@@ -264,7 +281,7 @@ export default function PublicMenu() {
           <div 
             className="mt-4 flex items-center gap-2 text-sm drop-shadow"
             style={{
-              color: buildTheme(restaurant.themeSettings).headerBackgroundType === 'gradient' || buildTheme(restaurant.themeSettings).showHeaderOverlay
+              color: theme.headerBackgroundType === 'gradient' || theme.showHeaderOverlay
                 ? '#ffffff'
                 : '#6B7280'
             }}
@@ -280,16 +297,16 @@ export default function PublicMenu() {
       {/* Category Filter - Dynamic Theme */}
       <div 
         className="sticky top-0 z-40 shadow-sm border-b overflow-x-auto"
-        style={{ backgroundColor: buildTheme(restaurant.themeSettings).backgroundColor }}
+        style={{ backgroundColor: theme.backgroundColor }}
       >
         <div className="max-w-4xl mx-auto px-4 py-3 flex gap-2">
           <button
-            onClick={() => setSelectedCategory('all')}
+            onClick={() => handleCategorySelect('all')}
             className="px-4 py-2 rounded-full font-medium whitespace-nowrap transition shadow-sm"
             style={{
-              backgroundColor: selectedCategory === 'all' ? buildTheme(restaurant.themeSettings).primaryColor : 'transparent',
-              color: selectedCategory === 'all' ? '#ffffff' : buildTheme(restaurant.themeSettings).primaryColor,
-              border: `2px solid ${buildTheme(restaurant.themeSettings).primaryColor}`
+              backgroundColor: selectedCategory === 'all' ? theme.primaryColor : 'transparent',
+              color: selectedCategory === 'all' ? '#ffffff' : theme.primaryColor,
+              border: `2px solid ${theme.primaryColor}`
             }}
           >
             Tümü
@@ -297,12 +314,12 @@ export default function PublicMenu() {
           {categories.map((category) => (
             <button
               key={category.id}
-              onClick={() => setSelectedCategory(category.id)}
+              onClick={() => handleCategorySelect(category.id)}
               className="px-4 py-2 rounded-full font-medium whitespace-nowrap transition shadow-sm"
               style={{
-                backgroundColor: selectedCategory === category.id ? buildTheme(restaurant.themeSettings).primaryColor : 'transparent',
-                color: selectedCategory === category.id ? '#ffffff' : buildTheme(restaurant.themeSettings).primaryColor,
-                border: `2px solid ${buildTheme(restaurant.themeSettings).primaryColor}`
+                backgroundColor: selectedCategory === category.id ? theme.primaryColor : 'transparent',
+                color: selectedCategory === category.id ? '#ffffff' : theme.primaryColor,
+                border: `2px solid ${theme.primaryColor}`
               }}
             >
               {category.name}
@@ -333,18 +350,7 @@ export default function PublicMenu() {
                     key={product.id}
                     className={'bg-white shadow-sm hover:shadow-md transition cursor-pointer overflow-hidden ' + cardRadiusClass}
                     style={{ borderColor: theme.primaryColor + '20', borderWidth: '1px' }}
-                    onClick={() => {
-                      // Track product view
-                      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-                      fetch(apiUrl + '/api/analytics/product-view', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          productId: product.id,
-                          restaurantId: restaurant?.id,
-                        }),
-                      }).catch(() => {});
-                    }}
+                    onClick={() => handleProductClick(product.id, restaurant.id)}
                   >
                     <div className="flex gap-4 p-4">
                       {theme.showProductImages && (() => {
@@ -360,8 +366,8 @@ export default function PublicMenu() {
                             src={imageSrc}
                             alt={product.name}
                             className={'w-24 h-24 object-cover flex-shrink-0 ' + cardRadiusClass}
+                            loading="lazy"
                             onError={(e) => {
-                              console.error('Image load failed for:', product.name);
                               e.currentTarget.src = DEFAULT_PRODUCT_IMAGE;
                             }}
                           />
