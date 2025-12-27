@@ -1,7 +1,16 @@
 import { Request, Response, NextFunction } from 'express';
 import prisma from '../config/database';
 import { ApiError } from '../utils/response';
-import { DemoRequestStatus, DemoRequestPotential } from '@prisma/client';
+import { DemoRequestStatus } from '@prisma/client';
+
+// Define potential enum values as constants
+const DemoRequestPotential = {
+  HIGH_PROBABILITY: 'HIGH_PROBABILITY',
+  NEGATIVE: 'NEGATIVE', 
+  LONG_TERM: 'LONG_TERM'
+} as const;
+
+type DemoRequestPotentialType = typeof DemoRequestPotential[keyof typeof DemoRequestPotential];
 
 const normalizeWhatsappPhone = (raw: unknown) => {
   if (typeof raw !== 'string') return '';
@@ -124,15 +133,15 @@ export const updateDemoRequestStatus = async (req: Request, res: Response, next:
     }
 
     // Validate potential if provided
-    const potentialOptions: DemoRequestPotential[] = [
+    const potentialOptions = [
       DemoRequestPotential.HIGH_PROBABILITY,
       DemoRequestPotential.NEGATIVE,
       DemoRequestPotential.LONG_TERM,
     ];
 
-    let nextPotential: DemoRequestPotential | undefined;
+    let nextPotential: DemoRequestPotentialType | undefined;
     if (potential && typeof potential === 'string') {
-      nextPotential = potential as DemoRequestPotential;
+      nextPotential = potential as DemoRequestPotentialType;
       if (!potentialOptions.includes(nextPotential)) {
         throw new ApiError(400, 'Geçersiz potansiyel durumu');
       }
