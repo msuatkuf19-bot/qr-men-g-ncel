@@ -23,7 +23,7 @@ import { errorHandler } from './middlewares/error.middleware';
 import { requestLogger } from './middlewares/logger.middleware';
 import { sanitizeInput } from './middlewares/sanitize.middleware';
 import { logger } from './services/logger.service';
-import prisma from './config/database';
+import prisma, { warmupDatabase } from './config/database';
 
 // Routes
 import authRoutes from './routes/auth.routes';
@@ -175,10 +175,21 @@ app.use(errorHandler);
  */
 const PORT = config.port;
 const HOST = '0.0.0.0'; // Railway için gerekli
+
+// Veritabanı bağlantısını önceden ısıt (warm-up)
+// İlk QR okumalarını hızlandırmak için kritik
+warmupDatabase()
+  .then(() => {
+    logger.info('✅ Veritabanı bağlantısı hazır (warm-up tamamlandı)');
+  })
+  .catch((err) => {
+    logger.error('❌ Veritabanı warm-up hatası:', err);
+  });
+
 const server = app.listen(PORT, HOST, () => {
   logger.info(`🚀 Server başlatıldı - Port: ${PORT}`);
   logger.info(`📝 Ortam: ${config.nodeEnv}`);
-  logger.info(`🗄️  Veritabanı: PostgreSQL`);
+  logger.info(`🗄️  Veritabanı: PostgreSQL (Supabase Pooler)`);
   logger.info(`🔗 Health Check: http://localhost:${PORT}/health`);
   
   if (config.nodeEnv === 'development') {

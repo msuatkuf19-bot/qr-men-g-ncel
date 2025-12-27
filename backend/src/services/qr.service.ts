@@ -267,14 +267,17 @@ export class QRCodeService {
   }
 
   /**
-   * QR kod tarama kayıt
+   * QR kod tarama kayıt - Optimize edilmiş
    */
   async trackScan(
     code: string,
     ipAddress?: string,
     userAgent?: string
   ): Promise<{ restaurantSlug: string; tableNumber?: string }> {
+    const t0 = Date.now();
+    
     try {
+      const t1 = Date.now();
       const qrCode = await prisma.qRCode.findUnique({
         where: { code },
         include: {
@@ -286,25 +289,27 @@ export class QRCodeService {
           },
         },
       });
+      const t2 = Date.now();
 
       if (!qrCode) {
         throw new ApiError(404, 'QR kod bulunamadı');
       }
 
-      // Tarama sayısını artır
-      await prisma.qRCode.update({
+      // Tarama sayısını artır ve Analytics'i fire-and-forget olarak yap
+      // Response'u bekletmemek için async işlemler
+      const updatePromise = prisma.qRCode.update({
         where: { code },
         data: {
           scanCount: { increment: 1 },
           lastScannedAt: new Date(),
         },
-      });
+      }).catch((err: Error) => logger.error('QR update hatası', { error: err.message }));
 
       // Analytics kaydı oluştur
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      await prisma.analytics.upsert({
+      const analyticsPromise = prisma.analytics.upsert({
         where: {
           restaurantId_date: {
             restaurantId: qrCode.restaurantId,
@@ -319,16 +324,15 @@ export class QRCodeService {
         update: {
           viewCount: { increment: 1 },
         },
-      });
+      }).catch((err: Error) => logger.error('Analytics upsert hatası', { error: err.message }));
 
-      // Device ve IP bilgisi logla
-      logger.info('QR kod tarandı', {
-        code,
-        restaurantId: qrCode.restaurantId,
-        tableNumber: qrCode.tableNumber,
-        ipAddress,
-        userAgent,
-      });
+      // Fire-and-forget: Ana response'u bekletmeden arka planda çalışsın
+      Promise.all([updatePromise, analyticsPromise]);
+
+      const t3 = Date.now();
+      
+      // Timing log
+      logger.info(`[TIMING][QR-SCAN] code=${code} | findUnique=${t2-t1}ms | total=${t3-t0}ms`);
 
       return {
         restaurantSlug: qrCode.restaurant.slug,

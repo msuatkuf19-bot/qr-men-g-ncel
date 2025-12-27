@@ -326,8 +326,17 @@ class ApiClient {
     return data;
   }
 
-  async updateDemoRequestStatus(id: string, status: 'PENDING' | 'CONTACTED' | 'DEMO_CREATED' | 'CANCELLED') {
-    const { data } = await this.client.patch(`/demo-requests/${id}/status`, { status });
+  async updateDemoRequestStatus(id: string, updateData: { 
+    status: 'PENDING' | 'CONTACTED' | 'DEMO_CREATED' | 'CANCELLED',
+    potential?: 'HIGH_PROBABILITY' | 'NEGATIVE' | 'LONG_TERM',
+    followUpMonth?: string 
+  }) {
+    const { data } = await this.client.patch(`/demo-requests/${id}/status`, updateData);
+    return data;
+  }
+
+  async deleteDemoRequest(id: string) {
+    const { data } = await this.client.delete(`/demo-requests/${id}`);
     return data;
   }
 

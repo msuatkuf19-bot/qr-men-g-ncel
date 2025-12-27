@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import prisma from '../config/database';
+import prisma, { warmupDatabase } from '../config/database';
 import { hashPassword, comparePassword } from '../utils/bcrypt';
 import { generateToken, verifyToken } from '../utils/jwt';
 import { ApiError, sendSuccess } from '../utils/response';
@@ -10,6 +10,78 @@ const UserRole = {
   RESTAURANT_ADMIN: 'RESTAURANT_ADMIN' as const,
   CUSTOMER: 'CUSTOMER' as const
 };
+
+/**
+ * Login Timing Log Helper - Performans analizi için
+ */
+interface LoginTimingLog {
+  t0_requestReceived: number;
+  t1_dbConnectStart?: number;
+  t1_dbConnectEnd?: number;
+  t2_userQueryStart?: number;
+  t2_userQueryEnd?: number;
+  t3_passwordCheckStart?: number;
+  t3_passwordCheckEnd?: number;
+  t4_restaurantQueryStart?: number;
+  t4_restaurantQueryEnd?: number;
+  t5_tokenGenStart?: number;
+  t5_tokenGenEnd?: number;
+  t6_responseSent?: number;
+  breakdown: {
+    dbConnect?: number;
+    userQuery?: number;
+    passwordCheck?: number;
+    restaurantQuery?: number;
+    tokenGeneration?: number;
+    totalResponse?: number;
+  };
+}
+
+function createLoginTimingLog(): LoginTimingLog {
+  return {
+    t0_requestReceived: Date.now(),
+    breakdown: {}
+  };
+}
+
+function logLoginTiming(timing: LoginTimingLog, email: string): void {
+  const total = timing.t6_responseSent! - timing.t0_requestReceived;
+  const deltaConnect = timing.breakdown.dbConnect || 0;
+  const deltaUserQuery = timing.breakdown.userQuery || 0;
+  const deltaPassword = timing.breakdown.passwordCheck || 0;
+  const deltaRestaurant = timing.breakdown.restaurantQuery || 0;
+  const deltaToken = timing.breakdown.tokenGeneration || 0;
+  
+  console.log(`[LOGIN-PERF] email=${email} t0=${timing.t0_requestReceived}, t1=${timing.t1_dbConnectEnd || 0}, t2=${timing.t2_userQueryEnd || 0}, t3=${timing.t3_passwordCheckEnd || 0}, t4=${timing.t4_restaurantQueryEnd || 0}, t5=${timing.t5_tokenGenEnd || 0}, t6=${timing.t6_responseSent!}, deltaConnect=${deltaConnect}ms, deltaUserQuery=${deltaUserQuery}ms, deltaPassword=${deltaPassword}ms, deltaRestaurant=${deltaRestaurant}ms, deltaToken=${deltaToken}ms, deltaTotal=${total}ms`);
+  
+  // Detaylı breakdown
+  console.log(`[LOGIN-PERF] BREAKDOWN: db_connect=${deltaConnect}ms, user_query=${deltaUserQuery}ms, password_check=${deltaPassword}ms, restaurant_query=${deltaRestaurant}ms, token_gen=${deltaToken}ms`);
+  
+  // Yavaş login'leri işaretle
+  if (total > 5000) {
+    console.error(`[LOGIN-PERF][CRITICAL] Login took ${total}ms - VERY SLOW for email=${email}`);
+  } else if (total > 2000) {
+    console.warn(`[LOGIN-PERF][SLOW] Login took ${total}ms for email=${email}`);
+  } else if (total > 1000) {
+    console.info(`[LOGIN-PERF][MEDIUM] Login took ${total}ms for email=${email}`);
+  } else {
+    console.log(`[LOGIN-PERF][FAST] Login took ${total}ms for email=${email}`);
+  }
+  
+  // Hangi adımın yavaş olduğunu tespit et
+  if (deltaConnect > 1000) {
+    console.warn(`[LOGIN-PERF][DIAGNOSIS] DB CONNECTION is slow: ${deltaConnect}ms`);
+  }
+  if (deltaUserQuery > 1000) {
+    console.warn(`[LOGIN-PERF][DIAGNOSIS] USER QUERY is slow: ${deltaUserQuery}ms`);
+  }
+  if (deltaPassword > 500) {
+    console.warn(`[LOGIN-PERF][DIAGNOSIS] PASSWORD CHECK is slow: ${deltaPassword}ms`);
+  }
+  if (deltaRestaurant > 1000) {
+    console.warn(`[LOGIN-PERF][DIAGNOSIS] RESTAURANT QUERY is slow: ${deltaRestaurant}ms`);
+  }
+}
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -79,64 +151,97 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
 };
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
-  // Login isteği detaylarını logluyoruz
-  console.log('🔐 Login request:', {
-    method: req.method,
-    path: req.path,
-    body: { email: req.body.email, password: '***' },
-    origin: req.headers.origin,
-  });
+  const timing = createLoginTimingLog();
+  
   try {
     const { email, password } = req.body;
 
-    // Kullanıcı kontrolü
-    const user = await prisma.user.findUnique({ where: { email } });
+    console.log(`[LOGIN-PERF] Login attempt for email: ${email}`);
+    
+    // === T1: DB Bağlantı Kontrolü ===
+    timing.t1_dbConnectStart = Date.now();
+    await warmupDatabase();
+    timing.t1_dbConnectEnd = Date.now();
+    timing.breakdown.dbConnect = timing.t1_dbConnectEnd - timing.t1_dbConnectStart;
+
+    // === T2: Kullanıcı Sorgusu ===
+    timing.t2_userQueryStart = Date.now();
+    const user = await prisma.user.findUnique({ 
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        password: true,
+        isActive: true,
+      }
+    });
+    timing.t2_userQueryEnd = Date.now();
+    timing.breakdown.userQuery = timing.t2_userQueryEnd - timing.t2_userQueryStart;
+    
     if (!user) {
+      timing.t6_responseSent = Date.now();
+      logLoginTiming(timing, email);
       throw new ApiError(401, 'Email veya şifre hatalı');
     }
 
-    // Şifre kontrolü
+    // === T3: Şifre Kontrolü ===
+    timing.t3_passwordCheckStart = Date.now();
     const isPasswordValid = await comparePassword(password, user.password);
+    timing.t3_passwordCheckEnd = Date.now();
+    timing.breakdown.passwordCheck = timing.t3_passwordCheckEnd - timing.t3_passwordCheckStart;
+    
     if (!isPasswordValid) {
+      timing.t6_responseSent = Date.now();
+      logLoginTiming(timing, email);
       throw new ApiError(401, 'Email veya şifre hatalı');
     }
 
     // Aktif kullanıcı kontrolü
     if (!user.isActive) {
+      timing.t6_responseSent = Date.now();
+      logLoginTiming(timing, email);
       throw new ApiError(403, 'Hesabınız devre dışı bırakılmış');
     }
 
-    // Restoran admin ise restaurant id'sini al
+    // === T4: Restoran ID Sorgusu (sadece gerekiyorsa) ===
     let restaurantId;
     if (user.role === UserRole.RESTAURANT_ADMIN) {
+      timing.t4_restaurantQueryStart = Date.now();
       const restaurant = await prisma.restaurant.findFirst({
         where: { ownerId: user.id },
         select: { id: true },
       });
+      timing.t4_restaurantQueryEnd = Date.now();
+      timing.breakdown.restaurantQuery = timing.t4_restaurantQueryEnd - timing.t4_restaurantQueryStart;
       restaurantId = restaurant?.id;
+    } else {
+      // Restoran sorgusu yapılmadı
+      timing.breakdown.restaurantQuery = 0;
     }
 
+    // === T5: Token Oluşturma ===
+    timing.t5_tokenGenStart = Date.now();
+    
+    const tokenPayload = {
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      restaurantId,
+    };
+
     // Access token oluştur (kısa ömürlü)
-    const accessToken = generateToken(
-      {
-        userId: user.id,
-        email: user.email,
-        role: user.role,
-        restaurantId,
-      },
-      '15m'
-    );
+    const accessToken = generateToken(tokenPayload, '15m');
 
     // Refresh token oluştur (uzun ömürlü)
-    const refreshToken = generateToken(
-      {
-        userId: user.id,
-        email: user.email,
-        role: user.role,
-        restaurantId,
-      },
-      '7d'
-    );
+    const refreshToken = generateToken(tokenPayload, '7d');
+    
+    timing.t5_tokenGenEnd = Date.now();
+    timing.breakdown.tokenGeneration = timing.t5_tokenGenEnd - timing.t5_tokenGenStart;
+
+    timing.t6_responseSent = Date.now();
+    logLoginTiming(timing, email);
 
     sendSuccess(
       res,
@@ -154,6 +259,8 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       'Giriş başarılı'
     );
   } catch (error) {
+    timing.t6_responseSent = Date.now();
+    logLoginTiming(timing, req.body.email || 'unknown');
     next(error);
   }
 };

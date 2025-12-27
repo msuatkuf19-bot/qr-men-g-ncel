@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import prisma from '../config/database';
 import { ApiError } from '../utils/response';
-import { DemoRequestStatus } from '@prisma/client';
+import { DemoRequestStatus, DemoRequestPotential } from '@prisma/client';
 
 const normalizeWhatsappPhone = (raw: unknown) => {
   if (typeof raw !== 'string') return '';
@@ -101,7 +101,7 @@ export const listDemoRequests = async (req: Request, res: Response, next: NextFu
 export const updateDemoRequestStatus = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const { status } = req.body ?? {};
+    const { status, potential, followUpMonth } = req.body ?? {};
 
     if (!id) {
       throw new ApiError(400, 'ID gerekli');
@@ -123,15 +123,74 @@ export const updateDemoRequestStatus = async (req: Request, res: Response, next:
       throw new ApiError(400, 'Geçersiz durum');
     }
 
+    // Validate potential if provided
+    const potentialOptions: DemoRequestPotential[] = [
+      DemoRequestPotential.HIGH_PROBABILITY,
+      DemoRequestPotential.NEGATIVE,
+      DemoRequestPotential.LONG_TERM,
+    ];
+
+    let nextPotential: DemoRequestPotential | undefined;
+    if (potential && typeof potential === 'string') {
+      nextPotential = potential as DemoRequestPotential;
+      if (!potentialOptions.includes(nextPotential)) {
+        throw new ApiError(400, 'Geçersiz potansiyel durumu');
+      }
+    }
+
+    // Validate followUpMonth format (YYYY-MM)
+    let nextFollowUpMonth: string | undefined;
+    if (followUpMonth && typeof followUpMonth === 'string') {
+      const monthRegex = /^\d{4}-(0[1-9]|1[0-2])$/;
+      if (!monthRegex.test(followUpMonth)) {
+        throw new ApiError(400, 'Takip ayı YYYY-MM formatında olmalı');
+      }
+      nextFollowUpMonth = followUpMonth;
+    }
+
+    const updateData: any = { status: nextStatus };
+    if (nextPotential !== undefined) updateData.potential = nextPotential;
+    if (nextFollowUpMonth !== undefined) updateData.followUpMonth = nextFollowUpMonth;
+
     const updated = await prisma.demoRequest.update({
       where: { id },
-      data: { status: nextStatus },
+      data: updateData,
     });
 
     return res.json({
       success: true,
-      message: 'Durum güncellendi',
+      message: 'Bilgiler güncellendi',
       data: updated,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteDemoRequest = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      throw new ApiError(400, 'ID gerekli');
+    }
+
+    // Check if record exists
+    const existing = await prisma.demoRequest.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      throw new ApiError(404, 'Demo talebi bulunamadı');
+    }
+
+    await prisma.demoRequest.delete({
+      where: { id },
+    });
+
+    return res.json({
+      success: true,
+      message: 'Demo talebi başarıyla silindi',
     });
   } catch (error) {
     next(error);

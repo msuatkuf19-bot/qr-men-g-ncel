@@ -1,13 +1,22 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyToken, JWTPayload } from '../utils/jwt';
 import { ApiError } from '../utils/response';
-import prisma from '../config/database';
+// prisma import kaldırıldı - middleware'de DB query yok
 
 // AuthRequest - authenticated request with user info
 export interface AuthRequest extends Request {
   user?: JWTPayload;
 }
 
+/**
+ * Authentication Middleware - OPTIMIZED
+ * 
+ * Önemli: Bu middleware artık sadece JWT token'ı verify eder,
+ * DB'ye dokunmaz. Bu sayede login sayfası ve diğer endpoint'ler
+ * hızlı çalışır.
+ * 
+ * DB kontrolü gerekiyorsa endpoint içinde yapılır.
+ */
 export const authenticate = async (
   req: AuthRequest,
   res: Response,
@@ -23,7 +32,10 @@ export const authenticate = async (
     const token = authHeader.substring(7);
     const decoded = verifyToken(token);
 
+    // Token geçerliyse user bilgisini request'e ekle
     req.user = decoded;
+    
+    // DB kontrolü yok - sadece JWT verify
     next();
   } catch (error) {
     next(new ApiError(401, 'Geçersiz veya süresi dolmuş token'));

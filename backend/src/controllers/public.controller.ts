@@ -1,19 +1,90 @@
 import { Request, Response, NextFunction } from 'express';
-import prisma from '../config/database';
+import prisma, { timedQuery, warmupDatabase } from '../config/database';
 import { ApiError, sendSuccess } from '../utils/response';
 import { slugifyTR } from '../utils/slugify';
 
-// Müşteri menü görüntüleme
+/**
+ * Timing log helper - Request süresini ölçer
+ */
+interface TimingLog {
+  t0_requestReceived: number;
+  t1_dbConnectStart?: number;
+  t1_dbConnectEnd?: number;
+  t2_queryStart?: number;
+  t2_queryEnd?: number;
+  t3_responseSent?: number;
+  breakdown: {
+    dbConnect?: number;
+    restaurantQuery?: number;
+    categoriesQuery?: number;
+    analyticsUpsert?: number;
+    totalResponse?: number;
+  };
+}
+
+function createTimingLog(): TimingLog {
+  return {
+    t0_requestReceived: Date.now(),
+    breakdown: {}
+  };
+}
+
+function logTiming(timing: TimingLog, slug: string): void {
+  const total = timing.t3_responseSent! - timing.t0_requestReceived;
+  const deltaConnect = timing.breakdown.dbConnect || 0;
+  const deltaQuery = (timing.breakdown.restaurantQuery || 0) + (timing.breakdown.categoriesQuery || 0);
+  
+  console.log(`[QR-PERF] slug=${slug} t0=${timing.t0_requestReceived}, t1=${timing.t1_dbConnectEnd || 0}, t2=${timing.t2_queryEnd || 0}, t3=${timing.t3_responseSent!}, deltaConnect=${deltaConnect}ms, deltaQuery=${deltaQuery}ms, deltaTotal=${total}ms`);
+  
+  // Detaylı breakdown
+  console.log(`[QR-PERF] BREAKDOWN: db_connect=${deltaConnect}ms, restaurant_query=${timing.breakdown.restaurantQuery || 0}ms, categories_query=${timing.breakdown.categoriesQuery || 0}ms, analytics=${timing.breakdown.analyticsUpsert || 0}ms`);
+  
+  // Yavaş istekleri işaretle
+  if (total > 3000) {
+    console.error(`[QR-PERF][CRITICAL] QR menu took ${total}ms - VERY SLOW for slug=${slug}`);
+  } else if (total > 1000) {
+    console.warn(`[QR-PERF][SLOW] QR menu took ${total}ms for slug=${slug}`);
+  } else if (total > 500) {
+    console.info(`[QR-PERF][MEDIUM] QR menu took ${total}ms for slug=${slug}`);
+  } else {
+    console.log(`[QR-PERF][FAST] QR menu took ${total}ms for slug=${slug}`);
+  }
+  
+  // Hangi adımın yavaş olduğunu tespit et
+  if (deltaConnect > 500) {
+    console.warn(`[QR-PERF][DIAGNOSIS] DB CONNECTION is slow: ${deltaConnect}ms`);
+  }
+  if (deltaQuery > 2000) {
+    console.warn(`[QR-PERF][DIAGNOSIS] QUERIES are slow: ${deltaQuery}ms`);
+  }
+}
+
+// Müşteri menü görüntüleme - Optimize edilmiş
 export const getPublicMenu = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
+  const timing = createTimingLog();
+  
   try {
     const { slug } = req.params;
-    const { table } = req.query;
+    const { table, lazy, categoryId, limit } = req.query;
+    
+    // Lazy load modu: Sadece belirli kategori ürünlerini getir
+    const isLazyLoad = lazy === 'true' && categoryId;
+    
+    // === T1: DB Bağlantı Kontrolü ===
+    timing.t1_dbConnectStart = Date.now();
+    await warmupDatabase();
+    timing.t1_dbConnectEnd = Date.now();
+    timing.breakdown.dbConnect = timing.t1_dbConnectEnd - timing.t1_dbConnectStart;
+
+    // === T2: Query Başlangıcı ===
+    timing.t2_queryStart = Date.now();
 
     // Restoran kontrolü
+    const restaurantQueryStart = Date.now();
     const restaurant = await prisma.restaurant.findUnique({
       where: { slug, isActive: true },
       select: {
@@ -31,12 +102,75 @@ export const getPublicMenu = async (
         themeSettings: true,
       },
     });
+    timing.breakdown.restaurantQuery = Date.now() - restaurantQueryStart;
 
     if (!restaurant) {
       throw new ApiError(404, 'Restoran bulunamadı');
     }
 
-    // Kategoriler ve ürünler
+    let categoriesWithImages: any[];
+    
+    // Lazy load modu: Sadece belirli kategori ürünlerini getir - OPTIMIZED
+    if (isLazyLoad) {
+      const categoryQueryStart = Date.now();
+      
+      // Kategori varlığını ve restoran ilişkisini kontrol et
+      const categoryExists = await prisma.category.findFirst({
+        where: {
+          id: categoryId as string,
+          restaurantId: restaurant.id,
+          isActive: true,
+        },
+        select: { id: true, name: true }
+      });
+      
+      if (!categoryExists) {
+        throw new ApiError(404, 'Kategori bulunamadı');
+      }
+      
+      // Sadece o kategorinin ürünlerini getir
+      const products = await prisma.product.findMany({
+        where: {
+          categoryId: categoryId as string,
+          isAvailable: true,
+        },
+        orderBy: { order: 'asc' },
+        take: limit ? parseInt(limit as string) : 50, // Varsayılan limit 50
+      });
+      
+      timing.breakdown.categoriesQuery = Date.now() - categoryQueryStart;
+      
+      // Cache-Control header - lazy load için daha uzun cache
+      res.setHeader('Cache-Control', 'public, s-maxage=180, stale-while-revalidate=900');
+      res.setHeader('X-Cache-Type', 'lazy-load');
+      
+      timing.t2_queryEnd = Date.now();
+      timing.t3_responseSent = Date.now();
+      logTiming(timing, slug);
+      
+      return sendSuccess(res, {
+        products: products.map(product => ({
+          ...product,
+          imageUrl: product.image || null,
+        })),
+        categoryId,
+        categoryName: categoryExists.name,
+        _meta: {
+          isLazyLoad: true,
+          productCount: products.length,
+          hasMore: limit ? products.length === parseInt(limit as string) : false,
+        },
+      });
+    }
+
+    // Normal mod: Optimize edilmiş ilk yükleme
+    const categoriesQueryStart = Date.now();
+    
+    // İlk yükleme optimizasyonu - lite mod desteği
+    const isLiteMode = req.query.lite === 'true';
+    const limitPerCategory = isLiteMode ? 3 : undefined; // Lite modda kategori başına sadece 3 ürün
+    
+    // Kategorileri ve ürünleri getir
     const categories = await prisma.category.findMany({
       where: {
         restaurantId: restaurant.id,
@@ -48,21 +182,21 @@ export const getPublicMenu = async (
             isAvailable: true,
           },
           orderBy: { order: 'asc' },
+          // Lite modda sadece ilk birkaç ürün
+          ...(limitPerCategory ? { take: limitPerCategory } : {}),
         },
       },
       orderBy: { order: 'asc' },
     });
+    timing.breakdown.categoriesQuery = Date.now() - categoriesQueryStart;
 
     // Ürün resimlerini düzenle - imageUrl ekle
-    // Eğer image alanı http ile başlıyorsa (Cloudinary URL), direkt kullan
-    // Değilse başına API URL ekle (/uploads/... için)
-    const categoriesWithImages = categories.map(category => ({
+    categoriesWithImages = categories.map(category => ({
       ...category,
       products: category.products.map(product => {
         let imageUrl = product.image;
-        // Eğer image varsa ve http/https ile başlamıyorsa (local path), API URL ekle
         if (imageUrl && !imageUrl.startsWith('http')) {
-          imageUrl = imageUrl; // Keep as is, will be prefixed in frontend
+          imageUrl = imageUrl;
         }
         return {
           ...product,
@@ -71,11 +205,15 @@ export const getPublicMenu = async (
       }),
     }));
 
-    // Analytics kaydı
+    timing.t2_queryEnd = Date.now();
+
+    // Analytics kaydı - async olarak, response'u bekletmeden
+    const analyticsStart = Date.now();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    await prisma.analytics.upsert({
+    // Analytics'i fire-and-forget olarak yap (response'u yavaşlatmasın)
+    prisma.analytics.upsert({
       where: {
         restaurantId_date: {
           restaurantId: restaurant.id,
@@ -90,14 +228,44 @@ export const getPublicMenu = async (
       update: {
         viewCount: { increment: 1 },
       },
+    }).catch((err: Error) => {
+      console.error('[ANALYTICS] Upsert hatası:', err.message);
     });
+    timing.breakdown.analyticsUpsert = Date.now() - analyticsStart;
+
+    // Cache-Control header - Lite mod için farklı cache stratejisi
+    if (isLiteMode) {
+      // Lite mod: Daha uzun cache (değişim daha az)
+      res.setHeader('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=600');
+      res.setHeader('X-Cache-Type', 'lite-mode');
+    } else {
+      // Normal mod: Orta cache
+      res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+      res.setHeader('X-Cache-Type', 'full-mode');
+    }
+    
+    timing.t3_responseSent = Date.now();
+    logTiming(timing, slug);
 
     sendSuccess(res, {
       restaurant,
       categories: categoriesWithImages,
       tableNumber: table,
+      // Lite mod ve lazy load desteği bilgisi
+      _meta: {
+        isLiteMode,
+        supportsLazyLoad: true,
+        lazyLoadEndpoint: `/api/public/menu/${slug}?lazy=true&categoryId={categoryId}`,
+        fullLoadEndpoint: isLiteMode ? `/api/public/menu/${slug}` : undefined,
+        categoryCount: categories.length,
+        totalProductsShown: categoriesWithImages.reduce((sum, cat) => sum + cat.products.length, 0),
+      },
     });
   } catch (error) {
+    timing.t3_responseSent = Date.now();
+    if (req.params.slug) {
+      logTiming(timing, req.params.slug);
+    }
     next(error);
   }
 };

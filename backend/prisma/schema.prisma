@@ -202,18 +202,21 @@ model User {
 }
 
 model DemoRequest {
-  id             String            @id @default(cuid())
+  id             String                   @id @default(cuid())
   fullName       String
   restaurantName String
   phone          String
   email          String?
   restaurantType String
   tableCount     Int
-  status         DemoRequestStatus @default(PENDING)
-  createdAt      DateTime          @default(now())
+  status         DemoRequestStatus        @default(PENDING)
+  potential      DemoRequestPotential?    @default(LONG_TERM)
+  followUpMonth  String?                  // YYYY-MM format
+  createdAt      DateTime                 @default(now())
 
   @@index([status])
   @@index([createdAt])
+  @@index([potential])
   @@map("demo_requests")
 }
 
@@ -235,4 +238,10 @@ enum DemoRequestStatus {
   CONTACTED
   DEMO_CREATED
   CANCELLED
+}
+
+enum DemoRequestPotential {
+  HIGH_PROBABILITY
+  NEGATIVE  
+  LONG_TERM
 }
