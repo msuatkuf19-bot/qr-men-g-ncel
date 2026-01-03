@@ -20,16 +20,12 @@ declare global {
  * Development'ta hot reload sırasında instance'ı korur
  * Production'da global singleton pattern kullanır
  */
-export const prisma: PrismaClient = 
-  globalThis.prisma || 
-  (() => {
-    const client = new PrismaClient({
-      log: process.env.NODE_ENV === 'production' ? ['error'] : ['query', 'error', 'warn'],
-    });
-    
-    if (process.env.NODE_ENV !== 'production') {
-      globalThis.prisma = client;
-    }
-    
-    return client;
-  })();
+const createPrismaClient = () => new PrismaClient({
+  log: process.env.NODE_ENV === 'production' ? ['error'] : ['query', 'error', 'warn'],
+});
+
+export const prisma = globalThis.prisma || createPrismaClient();
+
+if (process.env.NODE_ENV !== 'production') {
+  globalThis.prisma = prisma;
+}
