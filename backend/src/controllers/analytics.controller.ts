@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { prisma } from '../config/prisma';
+import prisma from '../config/prisma';
 import { sendSuccess, ApiError } from '../utils/response';
 import { AuthRequest } from '../middlewares/auth.middleware';
 

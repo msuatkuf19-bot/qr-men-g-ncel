@@ -3,4 +3,5 @@
  */
 
 // Re-export from new prisma config to maintain backwards compatibility  
-export { prisma as default } from './prisma';
+export { default } from './prisma';
+export { default as prisma } from './prisma';

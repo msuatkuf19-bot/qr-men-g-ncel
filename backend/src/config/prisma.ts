@@ -1,28 +1,18 @@
-/**
- * Prisma Client Singleton Instance
- * 
- * Bu dosya Prisma Client'ın tek bir instance'ını sağlar.
- * Cold start performansını optimize eder ve memory kullanımını azaltır.
- * 
- * Kullanım: import { prisma } from '../config/prisma';
- */
+const { PrismaClient } = require('@prisma/client');
 
-import { PrismaClient } from '@prisma/client';
+declare global {
+  // eslint-disable-next-line no-var
+  var prisma: typeof PrismaClient.prototype | undefined;
+}
 
-const prismaClientSingleton = () => {
-  return new PrismaClient({
-    log: process.env.NODE_ENV === 'production' ? ['error'] : ['query', 'error', 'warn'],
+const prisma =
+  global.prisma ??
+  new PrismaClient({
+    log: ['query', 'error', 'warn'],
   });
-};
-
-type PrismaClientSingleton = ReturnType<typeof prismaClientSingleton>;
-
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClientSingleton | undefined;
-};
-
-export const prisma = globalForPrisma.prisma ?? prismaClientSingleton();
 
 if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = prisma;
+  global.prisma = prisma;
 }
+
+export default prisma;

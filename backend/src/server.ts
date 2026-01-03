@@ -23,7 +23,7 @@ import { errorHandler } from './middlewares/error.middleware';
 import { requestLogger, performanceLogger } from './middlewares/logger.middleware';
 import { sanitizeInput } from './middlewares/sanitize.middleware';
 import { logger } from './services/logger.service';
-import { prisma } from './config/prisma';
+import prisma from './config/prisma';
 
 // Routes
 import authRoutes from './routes/auth.routes';

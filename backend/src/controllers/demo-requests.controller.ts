@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { prisma } from '../config/prisma';
+import prisma from '../config/prisma';
 import { ApiError } from '../utils/response';
 import { DemoRequestStatus } from '@prisma/client';
 

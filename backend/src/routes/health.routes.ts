@@ -38,7 +38,7 @@ router.get('/ready', async (req: Request, res: Response) => {
   
   try {
     // Lazy import prisma to avoid cold start issues
-    const { prisma } = await import('../config/prisma');
+    const prisma = (await import('../config/prisma')).default;
     
     // Simple DB query
     await prisma.$queryRaw`SELECT 1`;

@@ -1,6 +1,6 @@
 // Lazy import for heavy libraries to improve cold start performance
 import * as path from 'path';
-import { prisma } from '../config/prisma';
+import prisma from '../config/prisma';
 import { ApiError } from '../utils/response';
 import { logger } from './logger.service';
 

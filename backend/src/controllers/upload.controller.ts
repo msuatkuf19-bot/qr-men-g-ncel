@@ -4,7 +4,7 @@ import fs from 'fs';
 import { getCloudinary } from '../config/cloudinary';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { sendSuccess, ApiError } from '../utils/response';
-import { prisma } from '../config/prisma';
+import prisma from '../config/prisma';
 
 // PostgreSQL ImageType enum values
 const ImageType = {
