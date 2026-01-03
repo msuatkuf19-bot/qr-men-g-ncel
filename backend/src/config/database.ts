@@ -3,4 +3,4 @@
  */
 
 // Re-export from new prisma config to maintain backwards compatibility  
-export { prisma as default, warmupDatabase } from './prisma';
+export { prisma as default } from './prisma';

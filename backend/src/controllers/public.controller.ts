@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { prisma, warmupDatabase } from '../config/prisma';
+import { prisma } from '../config/prisma';
 import { ApiError, sendSuccess } from '../utils/response';
 import { slugifyTR } from '../utils/slugify';
 
@@ -76,7 +76,7 @@ export const getPublicMenu = async (
     
     // === T1: DB Bağlantı Kontrolü ===
     timing.t1_dbConnectStart = Date.now();
-    await warmupDatabase();
+    // Database connection established automatically
     timing.t1_dbConnectEnd = Date.now();
     timing.breakdown.dbConnect = timing.t1_dbConnectEnd - timing.t1_dbConnectStart;
 

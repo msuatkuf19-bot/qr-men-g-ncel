@@ -23,7 +23,7 @@ import { errorHandler } from './middlewares/error.middleware';
 import { requestLogger, performanceLogger } from './middlewares/logger.middleware';
 import { sanitizeInput } from './middlewares/sanitize.middleware';
 import { logger } from './services/logger.service';
-import { warmupDatabase, prisma } from './config/prisma';
+import { prisma } from './config/prisma';
 
 // Routes
 import authRoutes from './routes/auth.routes';
@@ -181,15 +181,7 @@ app.use(errorHandler);
 const PORT = config.port;
 const HOST = '0.0.0.0'; // Railway için gerekli
 
-// Veritabanı bağlantısını önceden ısıt (warm-up)
-// İlk QR okumalarını hızlandırmak için kritik
-warmupDatabase()
-  .then(() => {
-    logger.info('✅ Veritabanı bağlantısı hazır (warm-up tamamlandı)');
-  })
-  .catch((err) => {
-    logger.error('❌ Veritabanı warm-up hatası:', err);
-  });
+// Database connection will be established automatically on first query
 
 const server = app.listen(PORT, HOST, () => {
   logger.info(`🚀 Server başlatıldı - Port: ${PORT}`);
