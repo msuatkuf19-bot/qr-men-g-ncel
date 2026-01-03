@@ -175,6 +175,7 @@ model Restaurant {
   updatedAt            DateTime              @updatedAt
   ownerId              String
   analytics            Analytics[]
+  analyticsEvents      AnalyticsEvent[]
   categories           Category[]
   images               Image[]
   menuViews            MenuView[]
@@ -246,4 +247,53 @@ enum DemoRequestStatus {
 enum DemoRequestPotential {
   HIGH_PROBABILITY  // Yüksek İhtimal
   LONG_TERM         // Uzun Vade
+}
+
+enum AnalyticsEventType {
+  QR_SCAN
+  MENU_VIEW
+  CATEGORY_VIEW
+  PRODUCT_VIEW
+  SEARCH
+  CONTACT_CLICK
+  DIRECTION_CLICK
+}
+
+enum AnalyticsSource {
+  QR
+  DIRECT
+  SOCIAL
+  OTHER
+}
+
+enum DeviceType {
+  MOBILE
+  DESKTOP
+  TABLET
+}
+
+model AnalyticsEvent {
+  id           String              @id @default(uuid())
+  createdAt    DateTime            @default(now())
+  restaurantId String
+  sessionId    String?
+  visitorId    String?
+  eventType    AnalyticsEventType
+  pagePath     String?
+  categoryId   String?
+  productId    String?
+  tableNo      String?
+  source       AnalyticsSource?
+  deviceType   DeviceType
+  referrer     String?
+  userAgent    String?
+  ip           String?
+  restaurant   Restaurant          @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId, createdAt])
+  @@index([createdAt])
+  @@index([sessionId])
+  @@index([visitorId])
+  @@index([eventType])
+  @@map("analytics_events")
 }
