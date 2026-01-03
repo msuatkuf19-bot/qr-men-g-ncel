@@ -10,19 +10,22 @@
 import { PrismaClient } from '@prisma/client';
 
 // Global tip tanımlaması - Hot reload için
-const prismaGlobal = global as typeof global & {
-  prisma?: PrismaClient;
-};
+declare global {
+  // eslint-disable-next-line no-var
+  var prisma: PrismaClient | undefined;
+}
 
 /**
  * Prisma Client Singleton Instance
  * Development'ta hot reload sırasında instance'ı korur
  * Production'da global singleton pattern kullanır
  */
-export const prisma = prismaGlobal.prisma || new PrismaClient({
+const prisma = global.prisma ?? new PrismaClient({
   log: process.env.NODE_ENV === 'production' ? ['error'] : ['query', 'error', 'warn'],
 });
 
 if (process.env.NODE_ENV !== 'production') {
-  prismaGlobal.prisma = prisma;
+  global.prisma = prisma;
 }
+
+export { prisma };
