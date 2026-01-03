@@ -5,7 +5,7 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 
 export default function DemoMembershipsPage() {
   return (
-    <ProtectedRoute requiredRole="SUPER_ADMIN">
+    <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
       <DashboardLayout title="Demo Üyelikleri">
         <div className="p-6">
           <h1 className="text-2xl font-bold text-slate-900">Demo Üyelikleri</h1>

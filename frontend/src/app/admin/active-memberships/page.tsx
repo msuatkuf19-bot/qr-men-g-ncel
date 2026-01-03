@@ -5,7 +5,7 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 
 export default function ActiveMembershipsPage() {
   return (
-    <ProtectedRoute requiredRole="SUPER_ADMIN">
+    <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
       <DashboardLayout title="Aktif Üyelikler">
         <div className="p-6">
           <h1 className="text-2xl font-bold text-slate-900">Aktif Üyelikler</h1>
