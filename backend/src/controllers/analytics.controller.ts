@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import prisma from '../config/database';
+import { prisma } from '../config/prisma';
 import { sendSuccess, ApiError } from '../utils/response';
 import { AuthRequest } from '../middlewares/auth.middleware';
 
@@ -426,3 +426,65 @@ async function updateDailyStats(restaurantId: string, type: 'menu' | 'product') 
     });
   }
 }
+
+// ===== OPTIMIZED ENDPOINTS FOR LOGIN PERFORMANCE =====
+
+/**
+ * Lightweight dashboard summary - optimized for post-login loading
+ * Returns basic stats without heavy queries
+ */
+export const getDashboardSummary = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = req.user?.userId;
+    
+    if (!userId) {
+      throw new ApiError(401, 'User ID required');
+    }
+
+    // Find restaurant - use select to limit data
+    const restaurant = await prisma.restaurant.findFirst({
+      where: { ownerId: userId },
+      select: {
+        id: true,
+        name: true,
+        _count: {
+          select: {
+            qrCodes: true,
+            categories: true,
+          }
+        }
+      },
+    });
+
+    if (!restaurant) {
+      throw new ApiError(404, 'Restaurant not found');
+    }
+
+    // Get items count separately
+    const itemsCount = await prisma.product.count({
+      where: { category: { restaurantId: restaurant.id } }
+    });
+
+    // Get basic counts only - no complex aggregations
+    const summary = {
+      restaurant: {
+        id: restaurant.id,
+        name: restaurant.name,
+      },
+      counts: {
+        qrCodes: restaurant._count.qrCodes,
+        categories: restaurant._count.categories,
+        products: itemsCount,
+      },
+      lastUpdated: new Date().toISOString(),
+    };
+
+    sendSuccess(res, summary, 'Dashboard summary loaded');
+  } catch (error) {
+    next(error);
+  }
+};

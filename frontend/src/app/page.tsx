@@ -225,7 +225,7 @@ export default function Home() {
               {/* Main Heading */}
               <div>
                 <h1 className="text-5xl md:text-7xl font-bold leading-tight mb-4">
-                  <span className="text-gray-400">Kâğıt Menü</span>
+                  <span className="text-gray-400">Baskılı Menü</span>
                   <br />
                   <span className="text-gray-400">Dönemi</span>{' '}
                   <span className="gradient-text">Bitti</span>
@@ -722,9 +722,6 @@ export default function Home() {
               <div className="relative glass-effect rounded-3xl overflow-hidden border border-white/10">
                 {/* Header */}
                 <div className="bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 p-8 text-center relative overflow-hidden">
-                  <div className="pricing-corner absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
-                  <div className="pricing-corner absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12"></div>
-                  
                   <div className="relative z-10">
                     <div className="inline-block px-4 py-1 bg-white/20 backdrop-blur rounded-full mb-4">
                       <span className="text-white text-sm font-medium">Fiyatlandırma</span>

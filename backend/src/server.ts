@@ -20,10 +20,10 @@ import path from 'path';
 import { config, validateConfig } from './config';
 import { helmetConfig, apiLimiter, authLimiter } from './config/security';
 import { errorHandler } from './middlewares/error.middleware';
-import { requestLogger } from './middlewares/logger.middleware';
+import { requestLogger, performanceLogger } from './middlewares/logger.middleware';
 import { sanitizeInput } from './middlewares/sanitize.middleware';
 import { logger } from './services/logger.service';
-import prisma, { warmupDatabase } from './config/database';
+import { warmupDatabase, prisma } from './config/prisma';
 
 // Routes
 import authRoutes from './routes/auth.routes';
@@ -36,6 +36,7 @@ import uploadRoutes from './routes/upload.routes';
 import userRoutes from './routes/user.routes';
 import userExampleRoutes from './routes/user-example.routes'; // Railway deployment örneği
 import demoRequestRoutes from './routes/demo-requests.routes';
+import healthRoutes from './routes/health.routes';
 
 /**
  * Environment variables validasyonu
@@ -66,8 +67,9 @@ app.options('*', cors(corsOptions));
 // Security middleware
 app.use(helmetConfig);
 
-// Request logging
+// Request logging and performance monitoring
 app.use(requestLogger);
+app.use(performanceLogger);
 
 // Rate limiting - Development'ta devre dışı
 if (config.nodeEnv === 'production') {
@@ -86,6 +88,9 @@ app.use(sanitizeInput);
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // API Routes
+// Health check first - critical for cold start performance
+app.use('/api/health', healthRoutes);
+
 app.use('/api/auth', authRoutes);
 app.use('/api/restaurants', restaurantRoutes);
 app.use('/api/menu', menuRoutes);

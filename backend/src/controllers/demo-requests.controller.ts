@@ -1,12 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
-import prisma from '../config/database';
+import { prisma } from '../config/prisma';
 import { ApiError } from '../utils/response';
 import { DemoRequestStatus } from '@prisma/client';
 
 // Define potential enum values as constants
 const DemoRequestPotential = {
   HIGH_PROBABILITY: 'HIGH_PROBABILITY',
-  NEGATIVE: 'NEGATIVE', 
   LONG_TERM: 'LONG_TERM'
 } as const;
 
@@ -110,7 +109,7 @@ export const listDemoRequests = async (req: Request, res: Response, next: NextFu
 export const updateDemoRequestStatus = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const { status, potential, followUpMonth } = req.body ?? {};
+    const { status, potential, followUpMonth, membershipStartDate, membershipEndDate } = req.body ?? {};
 
     if (!id) {
       throw new ApiError(400, 'ID gerekli');
@@ -120,11 +119,11 @@ export const updateDemoRequestStatus = async (req: Request, res: Response, next:
       throw new ApiError(400, 'Durum gerekli');
     }
 
-    const allowed: DemoRequestStatus[] = [
-      DemoRequestStatus.PENDING,
-      DemoRequestStatus.CONTACTED,
-      DemoRequestStatus.DEMO_CREATED,
-      DemoRequestStatus.CANCELLED,
+    const allowed = [
+      'PENDING',
+      'DEMO_CREATED',
+      'FOLLOW_UP',
+      'NEGATIVE',
     ];
 
     const nextStatus = status as DemoRequestStatus;
@@ -135,7 +134,6 @@ export const updateDemoRequestStatus = async (req: Request, res: Response, next:
     // Validate potential if provided
     const potentialOptions = [
       DemoRequestPotential.HIGH_PROBABILITY,
-      DemoRequestPotential.NEGATIVE,
       DemoRequestPotential.LONG_TERM,
     ];
 
@@ -157,9 +155,31 @@ export const updateDemoRequestStatus = async (req: Request, res: Response, next:
       nextFollowUpMonth = followUpMonth;
     }
 
+    // Validate membership dates format (YYYY-MM-DD)
+    let nextMembershipStartDate: string | undefined;
+    let nextMembershipEndDate: string | undefined;
+    
+    if (membershipStartDate && typeof membershipStartDate === 'string') {
+      const dateRegex = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+      if (!dateRegex.test(membershipStartDate)) {
+        throw new ApiError(400, 'Üyelik başlangıç tarihi YYYY-MM-DD formatında olmalı');
+      }
+      nextMembershipStartDate = membershipStartDate;
+    }
+    
+    if (membershipEndDate && typeof membershipEndDate === 'string') {
+      const dateRegex = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+      if (!dateRegex.test(membershipEndDate)) {
+        throw new ApiError(400, 'Üyelik bitiş tarihi YYYY-MM-DD formatında olmalı');
+      }
+      nextMembershipEndDate = membershipEndDate;
+    }
+
     const updateData: any = { status: nextStatus };
     if (nextPotential !== undefined) updateData.potential = nextPotential;
     if (nextFollowUpMonth !== undefined) updateData.followUpMonth = nextFollowUpMonth;
+    if (nextMembershipStartDate !== undefined) updateData.membershipStartDate = nextMembershipStartDate;
+    if (nextMembershipEndDate !== undefined) updateData.membershipEndDate = nextMembershipEndDate;
 
     const updated = await prisma.demoRequest.update({
       where: { id },

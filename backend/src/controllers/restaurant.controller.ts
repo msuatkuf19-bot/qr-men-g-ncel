@@ -1,5 +1,5 @@
 import { Response, NextFunction } from 'express';
-import prisma from '../config/database';
+import { prisma } from '../config/prisma';
 import { ApiError, sendSuccess } from '../utils/response';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { hashPassword } from '../utils/bcrypt';
@@ -208,20 +208,29 @@ export const updateRestaurant = async (
 ) => {
   try {
     const { id } = req.params;
-    const { name, description, address, phone, email, logo, workingHours, themeColor, themeSettings, headerImage, instagramUrl, facebookUrl } = req.body;
+    const { name, description, address, phone, email, logo, workingHours, themeColor, themeSettings, headerImage, instagramUrl, facebookUrl, slug } = req.body;
 
     console.log('Update restaurant request:', { 
       id, 
       userId: req.user?.userId, 
       role: req.user?.role, 
       hasThemeSettings: !!themeSettings,
-      workingHours: workingHours ? workingHours.substring(0, 50) + '...' : 'empty'
+      workingHours: workingHours ? workingHours.substring(0, 50) + '...' : 'empty',
+      slug
     });
 
     // Restoran kontrolü
     const restaurant = await prisma.restaurant.findUnique({ where: { id } });
     if (!restaurant) {
       throw new ApiError(404, 'Restoran bulunamadı');
+    }
+
+    // Slug güncelleniyorsa benzersizlik kontrolü yap
+    if (slug && slug !== restaurant.slug) {
+      const existingRestaurant = await prisma.restaurant.findUnique({ where: { slug } });
+      if (existingRestaurant) {
+        throw new ApiError(400, 'Bu slug URL zaten kullanılıyor. Lütfen başka bir slug seçin.');
+      }
     }
 
     console.log('Restaurant found:', { restaurantId: restaurant.id, ownerId: restaurant.ownerId });
@@ -250,6 +259,7 @@ export const updateRestaurant = async (
         headerImage,
         instagramUrl,
         facebookUrl,
+        ...(slug !== undefined && { slug }),
         ...(workingHours !== undefined && { workingHours }),
         themeColor,
         ...(themeSettingsString !== undefined && { themeSettings: themeSettingsString }),

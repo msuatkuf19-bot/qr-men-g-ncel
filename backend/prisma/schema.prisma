@@ -202,17 +202,19 @@ model User {
 }
 
 model DemoRequest {
-  id             String                   @id @default(cuid())
-  fullName       String
-  restaurantName String
-  phone          String
-  email          String?
-  restaurantType String
-  tableCount     Int
-  status         DemoRequestStatus        @default(PENDING)
-  potential      DemoRequestPotential?    @default(LONG_TERM)
-  followUpMonth  String?                  // YYYY-MM format
-  createdAt      DateTime                 @default(now())
+  id                 String                   @id @default(cuid())
+  fullName           String
+  restaurantName     String
+  phone              String
+  email              String?
+  restaurantType     String
+  tableCount         Int
+  status             DemoRequestStatus        @default(PENDING)
+  potential          DemoRequestPotential?
+  followUpMonth      String?                  // YYYY-MM format
+  membershipStartDate String?                 // YYYY-MM-DD format
+  membershipEndDate   String?                 // YYYY-MM-DD format
+  createdAt          DateTime                 @default(now())
 
   @@index([status])
   @@index([createdAt])
@@ -234,14 +236,13 @@ enum UserRole {
 }
 
 enum DemoRequestStatus {
-  PENDING
-  CONTACTED
-  DEMO_CREATED
-  CANCELLED
+  PENDING           // Beklemede
+  DEMO_CREATED      // Demo Oluşturuldu
+  FOLLOW_UP         // Takip
+  NEGATIVE          // Olumsuz
 }
 
 enum DemoRequestPotential {
-  HIGH_PROBABILITY
-  NEGATIVE  
-  LONG_TERM
+  HIGH_PROBABILITY  // Yüksek İhtimal
+  LONG_TERM         // Uzun Vade
 }

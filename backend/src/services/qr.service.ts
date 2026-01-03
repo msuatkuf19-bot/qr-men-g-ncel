@@ -1,8 +1,6 @@
-import QRCode from 'qrcode';
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
-import { createCanvas, loadImage } from 'canvas';
+// Lazy import for heavy libraries to improve cold start performance
 import * as path from 'path';
-import prisma from '../config/database';
+import { prisma } from '../config/prisma';
 import { ApiError } from '../utils/response';
 import { logger } from './logger.service';
 
@@ -20,14 +18,15 @@ export class QRCodeService {
 
       logger.info('QR koduna logo ekleniyor', { logoPath });
 
+      // Lazy load canvas library
+      const { createCanvas, loadImage } = await import('canvas');
+
       // QR kodunu canvas'a yükle
       const qrImage = await loadImage(qrDataUrl);
       const qrSize = qrImage.width;
       
       const canvas = createCanvas(qrSize, qrSize);
       const ctx = canvas.getContext('2d');
-      
-      // QR kodunu çiz
       ctx.drawImage(qrImage, 0, 0, qrSize, qrSize);
       
       // Logo boyutunu hesapla (QR'ın %18'i)
@@ -94,6 +93,9 @@ export class QRCodeService {
       const menuUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/menu/${restaurant.slug}${
         tableNumber ? `?table=${tableNumber}` : ''
       }`;
+
+      // Lazy load QRCode library
+      const QRCode = (await import('qrcode')).default;
 
       // QR görselini oluştur
       let qrImage: string;
@@ -167,6 +169,9 @@ export class QRCodeService {
       if (!restaurant) {
         throw new ApiError(404, 'Restoran bulunamadı');
       }
+
+      // Lazy load PDF library
+      const { PDFDocument, rgb, StandardFonts } = await import('pdf-lib');
 
       // PDF oluştur
       const pdfDoc = await PDFDocument.create();
@@ -419,6 +424,9 @@ export class QRCodeService {
       const menuUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/menu/${qrCode.restaurant.slug}${
         qrCode.tableNumber ? `?table=${qrCode.tableNumber}` : ''
       }`;
+
+      // Lazy load QRCode for buffer generation
+      const QRCode = (await import('qrcode')).default;
 
       // QR görselini buffer olarak oluştur
       const qrBuffer = await QRCode.toBuffer(menuUrl, {

@@ -2,14 +2,15 @@
 
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
-import { ClipboardList, MessageCircle, X, Trash2 } from 'lucide-react';
+import { MessageCircle, ChevronDown, ChevronUp, Trash2, Calendar, User, Phone, Mail, Store, Table2, Eye } from 'lucide-react';
 import { normalizeTRPhoneToWaDigits, buildDemoWhatsAppMessage } from '@/utils/phone';
 import toast from 'react-hot-toast';
+import { motion, AnimatePresence } from 'framer-motion';
 
-type DemoRequestStatus = 'PENDING' | 'CONTACTED' | 'DEMO_CREATED' | 'CANCELLED';
-type DemoRequestPotential = 'HIGH_PROBABILITY' | 'NEGATIVE' | 'LONG_TERM';
+type DemoRequestStatus = 'PENDING' | 'DEMO_CREATED' | 'FOLLOW_UP' | 'NEGATIVE';
+type DemoRequestPotential = 'HIGH_PROBABILITY' | 'LONG_TERM';
 
 interface DemoRequest {
   id: string;
@@ -22,36 +23,24 @@ interface DemoRequest {
   status: DemoRequestStatus;
   potential?: DemoRequestPotential | null;
   followUpMonth?: string | null;
+  membershipStartDate?: string | null;
+  membershipEndDate?: string | null;
   createdAt: string;
 }
 
-const statusLabel: Record<DemoRequestStatus, string> = {
-  PENDING: 'Beklemede',
-  CONTACTED: 'İletişime Geçildi',
-  DEMO_CREATED: 'Demo Oluşturuldu',
-  CANCELLED: 'İptal',
+const statusConfig = {
+  PENDING: { label: 'Beklemede', color: 'bg-amber-50 text-amber-700 border-amber-200', icon: '⏳' },
+  DEMO_CREATED: { label: 'Demo Oluşturuldu', color: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: '🎉' },
+  FOLLOW_UP: { label: 'Takip', color: 'bg-blue-50 text-blue-700 border-blue-200', icon: '✅' },
+  NEGATIVE: { label: 'Olumsuz', color: 'bg-rose-50 text-rose-700 border-rose-200', icon: '❌' },
 };
 
-const statusBadge: Record<DemoRequestStatus, string> = {
-  PENDING: 'bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-200/80',
-  CONTACTED: 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-200/80',
-  DEMO_CREATED: 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200/80',
-  CANCELLED: 'bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-200/80',
+const potentialConfig = {
+  HIGH_PROBABILITY: { label: 'Yüksek İhtimal', color: 'bg-green-50 text-green-700 border-green-200', icon: '🎯' },
+  LONG_TERM: { label: 'Uzun Vade', color: 'bg-purple-50 text-purple-700 border-purple-200', icon: '📅' },
 };
 
-const potentialLabel: Record<DemoRequestPotential, string> = {
-  HIGH_PROBABILITY: 'Yüksek İhtimal',
-  NEGATIVE: 'Olumsuz',
-  LONG_TERM: 'Uzun Vade',
-};
-
-const potentialBadge: Record<DemoRequestPotential, string> = {
-  HIGH_PROBABILITY: 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-200/80',
-  NEGATIVE: 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-200/80', 
-  LONG_TERM: 'bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-200/80',
-};
-
-// WhatsApp ile iletişime geç - hazır mesaj ile
+// WhatsApp ile iletişime geç - AYNEN KORUNDU
 const openWhatsApp = (phone: string, fullName: string, restaurantName: string) => {
   const digits = normalizeTRPhoneToWaDigits(phone);
   if (!digits) {
@@ -63,501 +52,768 @@ const openWhatsApp = (phone: string, fullName: string, restaurantName: string) =
   window.open(url, '_blank', 'noopener,noreferrer');
 };
 
-export default function AdminDemoRequests() {
-  const [items, setItems] = useState<DemoRequest[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [updatingId, setUpdatingId] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [selected, setSelected] = useState<DemoRequest | null>(null);
-  const [editMode, setEditMode] = useState(false);
-  const [tempPotential, setTempPotential] = useState<DemoRequestPotential | ''>('');
-  const [tempFollowUpMonth, setTempFollowUpMonth] = useState('');
+// Tarih formatlama
+const formatDate = (dateStr: string) => {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' });
+};
 
-  const load = async () => {
+// DemoRequestRow Component - Satır ve Detay
+function DemoRequestRow({ request, onUpdate, onDelete }: {
+  request: DemoRequest;
+  onUpdate: (id: string, data: Partial<DemoRequest>) => void;
+  onDelete: (id: string) => void;
+}) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [localStatus, setLocalStatus] = useState(request.status);
+  const [localPotential, setLocalPotential] = useState<DemoRequestPotential | null>(request.potential || null);
+  const [followUpDate, setFollowUpDate] = useState(request.followUpMonth || '');
+  const [membershipStart, setMembershipStart] = useState(request.membershipStartDate || '');
+  const [membershipEnd, setMembershipEnd] = useState(request.membershipEndDate || '');
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    
+    try {
+      await apiClient.updateDemoRequestStatus(request.id, {
+        status: localStatus,
+        potential: localPotential || undefined,
+        followUpMonth: followUpDate || null,
+        membershipStartDate: membershipStart || null,
+        membershipEndDate: membershipEnd || null
+      });
+      
+      toast.success('Bilgiler kaydedildi', { duration: 2000 });
+      setIsExpanded(false); // Detay panelini kapat
+    } catch (error) {
+      toast.error('Kaydetme başarısız', { duration: 2000 });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleStatusChange = async (newStatus: DemoRequestStatus) => {
+    setLocalStatus(newStatus);
+    
+    // Durum değiştir
+    try {
+      await apiClient.updateDemoRequestStatus(request.id, {
+        status: newStatus,
+        potential: localPotential || undefined,
+        followUpMonth: followUpDate || null
+      });
+      onUpdate(request.id, { status: newStatus });
+      toast.success('Durum güncellendi', { duration: 2000 });
+    } catch (error) {
+      toast.error('Durum güncellenemedi', { duration: 2000 });
+      setLocalStatus(request.status); // Geri al
+    }
+  };
+
+  const handlePotentialChange = async (newPotential: DemoRequestPotential | '') => {
+    const potentialValue = newPotential === '' ? null : newPotential;
+    setLocalPotential(potentialValue);
+    
+    try {
+      await apiClient.updateDemoRequestStatus(request.id, {
+        status: localStatus,
+        potential: potentialValue || undefined,
+        followUpMonth: followUpDate || null
+      });
+      onUpdate(request.id, { potential: potentialValue });
+      toast.success('Potansiyel güncellendi', { duration: 2000 });
+    } catch (error) {
+      toast.error('Potansiyel güncellenemedi', { duration: 2000 });
+      setLocalPotential(request.potential || null);
+    }
+  };
+
+  const handleFollowUpDateChange = async (newDate: string) => {
+    setFollowUpDate(newDate);
+    
+    try {
+      await apiClient.updateDemoRequestStatus(request.id, {
+        status: localStatus,
+        potential: localPotential || undefined,
+        followUpMonth: newDate || null
+      });
+      onUpdate(request.id, { followUpMonth: newDate });
+      toast.success('Takip tarihi güncellendi', { duration: 2000 });
+    } catch (error) {
+      toast.error('Tarih güncellenemedi', { duration: 2000 });
+      setFollowUpDate(request.followUpMonth || '');
+    }
+  };
+
+  const statusCfg = statusConfig[localStatus];
+  const isLongTerm = localPotential === 'LONG_TERM';
+
+  return (
+    <>
+      {/* Mobil Kart Görünümü */}
+      <div className="lg:hidden border-b border-slate-200 bg-white hover:bg-slate-50/50 transition-colors">
+        <div className="p-4 space-y-3">
+          {/* Üst Kısım - Restoran ve Durum */}
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <h3 className="font-bold text-slate-900 text-base truncate">{request.restaurantName}</h3>
+              <p className="text-sm text-slate-500 flex items-center gap-1.5 mt-1">
+                <User className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="truncate">{request.fullName}</span>
+              </p>
+            </div>
+            <select
+              value={localStatus}
+              onChange={(e) => handleStatusChange(e.target.value as DemoRequestStatus)}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold border cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 flex-shrink-0 ${statusCfg.color}`}
+            >
+              <option value="PENDING" className="bg-white text-slate-900">{statusConfig.PENDING.icon}</option>
+              <option value="DEMO_CREATED" className="bg-white text-slate-900">{statusConfig.DEMO_CREATED.icon}</option>
+              <option value="FOLLOW_UP" className="bg-white text-slate-900">{statusConfig.FOLLOW_UP.icon}</option>
+              <option value="NEGATIVE" className="bg-white text-slate-900">{statusConfig.NEGATIVE.icon}</option>
+            </select>
+          </div>
+
+          {/* Bilgiler Grid */}
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="flex items-center gap-2">
+              <Store className="w-4 h-4 text-slate-400 flex-shrink-0" />
+              <span className="text-slate-700 truncate">{request.restaurantType}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Table2 className="w-4 h-4 text-slate-400 flex-shrink-0" />
+              <span className="text-slate-700">{request.tableCount} masa</span>
+            </div>
+            <div className="flex items-center gap-2 col-span-2">
+              <Calendar className="w-4 h-4 text-slate-400 flex-shrink-0" />
+              <span className="text-slate-500 text-xs">{formatDate(request.createdAt)}</span>
+            </div>
+          </div>
+
+          {/* Alt Kısım - Butonlar */}
+          <div className="flex gap-2 pt-2">
+            <button
+              onClick={() => openWhatsApp(request.phone, request.fullName, request.restaurantName)}
+              className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium bg-green-50 hover:bg-green-100 active:bg-green-200 text-green-700 border border-green-200 transition-colors"
+            >
+              <MessageCircle className="w-4 h-4" />
+              WhatsApp
+            </button>
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 transition-colors"
+            >
+              <Eye className="w-4 h-4" />
+              Detay
+              {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobil Detay Paneli */}
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="overflow-hidden bg-slate-50/50"
+            >
+              <div className="p-4 space-y-4 border-t border-slate-200">
+                {/* Müşteri Bilgileri */}
+                <div className="space-y-3 bg-white p-4 rounded-xl border border-slate-200">
+                  <h4 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                    <User className="w-4 h-4 text-orange-500" />
+                    Müşteri Bilgileri
+                  </h4>
+                  
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-start gap-2">
+                      <Phone className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <span className="text-xs text-slate-500 block">Telefon</span>
+                        <button
+                          onClick={() => openWhatsApp(request.phone, request.fullName, request.restaurantName)}
+                          className="text-sm font-medium text-green-600 hover:text-green-700 hover:underline break-all"
+                        >
+                          {request.phone}
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-2">
+                      <Mail className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <span className="text-xs text-slate-500 block">E-posta</span>
+                        <span className="text-sm text-slate-700 break-all">{request.email || '—'}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Üyelik & Süreç */}
+                <div className="space-y-3 bg-white p-4 rounded-xl border border-slate-200">
+                  <h4 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-blue-500" />
+                    Üyelik & Süreç
+                  </h4>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-xs text-slate-500 block mb-2">Üyelik Başlangıç</span>
+                      <input
+                        type="date"
+                        value={membershipStart}
+                        onChange={(e) => setMembershipStart(e.target.value)}
+                        className="w-full px-3 py-2.5 rounded-lg text-sm border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
+                      />
+                    </div>
+                    
+                    <div>
+                      <span className="text-xs text-slate-500 block mb-2">Üyelik Bitiş</span>
+                      <input
+                        type="date"
+                        value={membershipEnd}
+                        onChange={(e) => setMembershipEnd(e.target.value)}
+                        className="w-full px-3 py-2.5 rounded-lg text-sm border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
+                      />
+                    </div>
+                    
+                    <div>
+                      <span className="text-xs text-slate-500 block mb-2">Potansiyel</span>
+                      <select
+                        value={localPotential || ''}
+                        onChange={(e) => handlePotentialChange(e.target.value as DemoRequestPotential | '')}
+                        className="w-full px-3 py-2.5 rounded-lg text-sm border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none cursor-pointer"
+                      >
+                        <option value="" className="text-slate-900">Seçiniz</option>
+                        <option value="HIGH_PROBABILITY" className="text-slate-900">🎯 Yüksek İhtimal</option>
+                        <option value="LONG_TERM" className="text-slate-900">📅 Uzun Vade</option>
+                      </select>
+                    </div>
+                    
+                    <AnimatePresence>
+                      {isLongTerm && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <span className="text-xs text-slate-500 block mb-2">Hedef Tarih</span>
+                          <input
+                            type="month"
+                            value={followUpDate}
+                            onChange={(e) => handleFollowUpDateChange(e.target.value)}
+                            className="w-full px-3 py-2.5 rounded-lg text-sm border border-purple-200 bg-purple-50/30 text-slate-900 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 focus:outline-none"
+                          />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
+
+                {/* Butonlar */}
+                <div className="space-y-2">
+                  <button
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white border border-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSaving ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Kaydediliyor...
+                      </>
+                    ) : (
+                      <>
+                        <Calendar className="w-4 h-4" />
+                        Kaydet
+                      </>
+                    )}
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      if (confirm('Bu demo talebini silmek istediğinizden emin misiniz?')) {
+                        onDelete(request.id);
+                      }
+                    }}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium bg-rose-50 hover:bg-rose-100 active:bg-rose-200 text-rose-700 border border-rose-200 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Talebi Sil
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Desktop Tablo Görünümü */}
+      <tr className="hidden lg:table-row hover:bg-slate-50/50 transition-colors border-b border-slate-200">
+        {/* Restoran Adı */}
+        <td className="px-4 py-4">
+          <div className="flex flex-col">
+            <span className="font-bold text-slate-900">{request.restaurantName}</span>
+            <span className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+              <User className="w-3 h-3" />
+              {request.fullName}
+            </span>
+          </div>
+        </td>
+
+        {/* Restoran Tipi */}
+        <td className="px-4 py-4">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+            <Store className="w-3 h-3" />
+            {request.restaurantType}
+          </span>
+        </td>
+
+        {/* Masa Sayısı */}
+        <td className="px-4 py-4">
+          <span className="inline-flex items-center gap-1 text-sm text-slate-700">
+            <Table2 className="w-4 h-4 text-slate-400" />
+            {request.tableCount} masa
+          </span>
+        </td>
+
+        {/* Telefon / WhatsApp */}
+        <td className="px-4 py-4">
+          <button
+            onClick={() => openWhatsApp(request.phone, request.fullName, request.restaurantName)}
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 transition-colors"
+          >
+            <MessageCircle className="w-4 h-4" />
+            WhatsApp
+          </button>
+        </td>
+
+        {/* Durum Dropdown */}
+        <td className="px-4 py-4">
+          <select
+            value={localStatus}
+            onChange={(e) => handleStatusChange(e.target.value as DemoRequestStatus)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold border cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 ${statusCfg.color}`}
+          >
+            <option value="PENDING" className="bg-white text-slate-900">{statusConfig.PENDING.icon} {statusConfig.PENDING.label}</option>
+            <option value="DEMO_CREATED" className="bg-white text-slate-900">{statusConfig.DEMO_CREATED.icon} {statusConfig.DEMO_CREATED.label}</option>
+            <option value="FOLLOW_UP" className="bg-white text-slate-900">{statusConfig.FOLLOW_UP.icon} {statusConfig.FOLLOW_UP.label}</option>
+            <option value="NEGATIVE" className="bg-white text-slate-900">{statusConfig.NEGATIVE.icon} {statusConfig.NEGATIVE.label}</option>
+          </select>
+        </td>
+
+        {/* Oluşturulma Tarihi */}
+        <td className="px-4 py-4 text-sm text-slate-500">
+          {formatDate(request.createdAt)}
+        </td>
+
+        {/* Detay Butonu */}
+        <td className="px-4 py-4">
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
+          >
+            <Eye className="w-4 h-4" />
+            Detay
+            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
+        </td>
+      </tr>
+
+      {/* Detay Satırı (Expand) - Desktop */}
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.tr
+            className="hidden lg:table-row"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <td colSpan={7} className="px-0 py-0 bg-slate-50/50">
+              <motion.div
+                initial={{ height: 0 }}
+                animate={{ height: 'auto' }}
+                exit={{ height: 0 }}
+                transition={{ duration: 0.3 }}
+                className="overflow-hidden"
+              >
+                <div className="px-6 py-6 grid grid-cols-1 md:grid-cols-2 gap-6 border-b border-slate-200">
+                  {/* Sol Kolon - Müşteri & Restoran Bilgileri */}
+                  <div className="space-y-4">
+                    <h4 className="font-bold text-slate-900 flex items-center gap-2">
+                      <User className="w-5 h-5 text-orange-500" />
+                      Müşteri & Restoran Bilgileri
+                    </h4>
+                    
+                    <div className="space-y-3 bg-white p-4 rounded-xl border border-slate-200">
+                      <div className="flex items-start gap-3">
+                        <Store className="w-4 h-4 text-slate-400 mt-0.5" />
+                        <div className="flex-1">
+                          <span className="text-xs text-slate-500 block">Restoran Adı</span>
+                          <span className="text-sm font-semibold text-slate-900">{request.restaurantName}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3">
+                        <User className="w-4 h-4 text-slate-400 mt-0.5" />
+                        <div className="flex-1">
+                          <span className="text-xs text-slate-500 block">Yetkili Ad Soyad</span>
+                          <span className="text-sm font-semibold text-slate-900">{request.fullName}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3">
+                        <Phone className="w-4 h-4 text-slate-400 mt-0.5" />
+                        <div className="flex-1">
+                          <span className="text-xs text-slate-500 block">Telefon</span>
+                          <button
+                            onClick={() => openWhatsApp(request.phone, request.fullName, request.restaurantName)}
+                            className="text-sm font-semibold text-green-600 hover:text-green-700 hover:underline"
+                          >
+                            {request.phone}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3">
+                        <Mail className="w-4 h-4 text-slate-400 mt-0.5" />
+                        <div className="flex-1">
+                          <span className="text-xs text-slate-500 block">E-posta</span>
+                          <span className="text-sm text-slate-700">{request.email || '—'}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3">
+                        <Store className="w-4 h-4 text-slate-400 mt-0.5" />
+                        <div className="flex-1">
+                          <span className="text-xs text-slate-500 block">Restoran Tipi</span>
+                          <span className="text-sm text-slate-700">{request.restaurantType}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3">
+                        <Table2 className="w-4 h-4 text-slate-400 mt-0.5" />
+                        <div className="flex-1">
+                          <span className="text-xs text-slate-500 block">Masa Sayısı</span>
+                          <span className="text-sm text-slate-700">{request.tableCount} masa</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sağ Kolon - Üyelik & Süreç Bilgileri */}
+                  <div className="space-y-4">
+                    <h4 className="font-bold text-slate-900 flex items-center gap-2">
+                      <Calendar className="w-5 h-5 text-blue-500" />
+                      Üyelik & Süreç Bilgileri
+                    </h4>
+                    
+                    <div className="space-y-3 bg-white p-4 rounded-xl border border-slate-200">
+                      <div className="flex items-start gap-3">
+                        <Calendar className="w-4 h-4 text-slate-400 mt-0.5" />
+                        <div className="flex-1">
+                          <span className="text-xs text-slate-500 block mb-2">Üyelik Başlangıç Tarihi</span>
+                          <input
+                            type="date"
+                            value={membershipStart}
+                            onChange={(e) => setMembershipStart(e.target.value)}
+                            className="w-full px-3 py-2 rounded-lg text-sm border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3">
+                        <Calendar className="w-4 h-4 text-slate-400 mt-0.5" />
+                        <div className="flex-1">
+                          <span className="text-xs text-slate-500 block mb-2">Üyelik Bitiş Tarihi</span>
+                          <input
+                            type="date"
+                            value={membershipEnd}
+                            onChange={(e) => setMembershipEnd(e.target.value)}
+                            className="w-full px-3 py-2 rounded-lg text-sm border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3">
+                        <div className="w-4 h-4 text-slate-400 mt-0.5">{statusCfg.icon}</div>
+                        <div className="flex-1">
+                          <span className="text-xs text-slate-500 block">Demo Durumu</span>
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border mt-1 ${statusCfg.color}`}>
+                            {statusCfg.label}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Potansiyel Seçimi */}
+                      <div className="flex items-start gap-3">
+                        <div className="w-4 h-4 text-slate-400 mt-0.5">🎯</div>
+                        <div className="flex-1">
+                          <span className="text-xs text-slate-500 block mb-2">Potansiyel</span>
+                          <select
+                            value={localPotential || ''}
+                            onChange={(e) => handlePotentialChange(e.target.value as DemoRequestPotential | '')}
+                            className="w-full px-3 py-2 rounded-lg text-sm border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none cursor-pointer"
+                          >
+                            <option value="" className="text-slate-900">Seçiniz</option>
+                            <option value="HIGH_PROBABILITY" className="text-slate-900">🎯 Yüksek İhtimal</option>
+                            <option value="LONG_TERM" className="text-slate-900">📅 Uzun Vade</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Uzun Vade Tarih Seçici */}
+                      <AnimatePresence>
+                        {isLongTerm && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="flex items-start gap-3"
+                          >
+                            <Calendar className="w-4 h-4 text-purple-500 mt-0.5" />
+                            <div className="flex-1">
+                              <span className="text-xs text-slate-500 block mb-2">Hedef Tarih (Ay/Yıl)</span>
+                              <input
+                                type="month"
+                                value={followUpDate}
+                                onChange={(e) => handleFollowUpDateChange(e.target.value)}
+                                className="w-full px-3 py-2 rounded-lg text-sm border border-purple-200 bg-purple-50/30 text-slate-900 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 focus:outline-none"
+                              />
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
+                    {/* Kaydet Butonu */}
+                    <button
+                      onClick={handleSave}
+                      disabled={isSaving}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white border border-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isSaving ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          Kaydediliyor...
+                        </>
+                      ) : (
+                        <>
+                          <Calendar className="w-4 h-4" />
+                          Kaydet
+                        </>
+                      )}
+                    </button>
+
+                    {/* Sil Butonu */}
+                    <button
+                      onClick={() => {
+                        if (confirm('Bu demo talebini silmek istediğinizden emin misiniz?')) {
+                          onDelete(request.id);
+                        }
+                      }}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Talebi Sil
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </td>
+          </motion.tr>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+
+// Ana Component - DemoRequestsTable
+function DemoRequestsTable() {
+  const [requests, setRequests] = useState<DemoRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<DemoRequestStatus | 'ALL'>('ALL');
+
+  useEffect(() => {
+    fetchRequests();
+  }, []);
+
+  const fetchRequests = async () => {
     try {
       setLoading(true);
-      const res = await apiClient.getDemoRequests();
-      setItems((res.data || []) as DemoRequest[]);
-    } catch (e) {
-      console.error('Demo talepleri yüklenemedi:', e);
+      const response = await apiClient.getDemoRequests();
+      // Backend {success, message, data} formatında dönüyor
+      const data = response?.data || response;
+      // Emin ol ki data bir array
+      if (Array.isArray(data)) {
+        setRequests(data);
+      } else {
+        console.error('API response is not an array:', response);
+        setRequests([]);
+      }
+    } catch (error) {
+      console.error('Fetch error:', error);
+      toast.error('Demo talepleri yüklenemedi', { duration: 3000 });
+      setRequests([]); // Hata durumunda boş array
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    load();
-  }, []);
-
-  const onChangeStatus = async (id: string, status: DemoRequestStatus, potential?: DemoRequestPotential, followUpMonth?: string) => {
-    try {
-      setUpdatingId(id);
-      const updateData: any = { status };
-      if (potential !== undefined) updateData.potential = potential;
-      if (followUpMonth !== undefined) updateData.followUpMonth = followUpMonth;
-
-      await apiClient.updateDemoRequestStatus(id, updateData);
-      setItems((prev) => prev.map((x) => (x.id === id ? { ...x, ...updateData } : x)));
-      setSelected((prev) => (prev?.id === id ? { ...prev, ...updateData } : prev));
-    } catch (e: any) {
-      toast.error(e?.response?.data?.message || 'Güncelleme başarısız');
-    } finally {
-      setUpdatingId(null);
-    }
+  const handleUpdate = (id: string, data: Partial<DemoRequest>) => {
+    setRequests(prev => prev.map(req => req.id === id ? { ...req, ...data } : req));
   };
 
-  // Backward compatible wrapper for status-only changes
-  const onChangeStatusOnly = (id: string, status: DemoRequestStatus) => {
-    return onChangeStatus(id, status);
-  };
-
-  const onDelete = async (id: string) => {
+  const handleDelete = async (id: string) => {
     try {
-      setDeletingId(id);
       await apiClient.deleteDemoRequest(id);
-      setItems((prev) => prev.filter((x) => x.id !== id));
-      setSelected((prev) => (prev?.id === id ? null : prev));
-      setDeleteConfirm(null);
-      toast.success('Demo talebi silindi');
-    } catch (e: any) {
-      toast.error(e?.response?.data?.message || 'Silme başarısız');
-    } finally {
-      setDeletingId(null);
+      setRequests(prev => prev.filter(req => req.id !== id));
+      toast.success('Demo talebi silindi', { duration: 2000 });
+    } catch (error) {
+      toast.error('Silme işlemi başarısız', { duration: 2000 });
     }
   };
 
-  const startEdit = (item: DemoRequest) => {
-    setTempPotential(item.potential || '');
-    setTempFollowUpMonth(item.followUpMonth || '');
-    setEditMode(true);
-  };
-
-  const openModal = (item: DemoRequest) => {
-    setSelected(item);
-    setTempPotential(item.potential || '');
-    setTempFollowUpMonth(item.followUpMonth || '');
-    setEditMode(true);
-  };
-
-  const saveEdit = async () => {
-    if (!selected) return;
+  // Filtreleme - requests array olduğundan emin ol
+  const filteredRequests = Array.isArray(requests) ? requests.filter(req => {
+    const matchesSearch = 
+      req.restaurantName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      req.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      req.phone.includes(searchTerm);
     
-    const potentialValue = tempPotential || undefined;
-    const monthValue = tempFollowUpMonth || undefined;
+    const matchesStatus = statusFilter === 'ALL' || req.status === statusFilter;
 
-    await onChangeStatus(selected.id, selected.status, potentialValue as DemoRequestPotential, monthValue);
-    setEditMode(false);
-  };
+    return matchesSearch && matchesStatus;
+  }) : [];
 
-  const cancelEdit = () => {
-    setEditMode(false);
-    setTempPotential('');
-    setTempFollowUpMonth('');
-  };
-
-  const emptyState = useMemo(() => !loading && items.length === 0, [loading, items.length]);
+  const pendingCount = Array.isArray(requests) ? requests.filter(r => r.status === 'PENDING').length : 0;
 
   return (
-    <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
+    <ProtectedRoute>
       <DashboardLayout>
-        {/* Header */}
-        <div className="mb-6 sm:mb-8">
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0">
-              <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-200/70">
-                  <ClipboardList className="h-5 w-5" strokeWidth={1.9} aria-hidden="true" />
-                </span>
-                <div className="min-w-0">
-                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-                    Demo Talepleri
-                  </h1>
-                  <p className="mt-1 text-[13px] sm:text-[14px] text-slate-500">
-                    Landing/Demo formundan gelen ücretsiz demo talepleri.
-                  </p>
-                </div>
+        <div className="p-3 sm:p-4 lg:p-6 max-w-[1600px] mx-auto">
+          {/* Header */}
+          <div className="mb-4 sm:mb-6">
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-1 sm:mb-2">Demo Talepleri</h1>
+            <p className="text-sm sm:text-base text-slate-600">Gelen demo taleplerini görüntüleyin ve yönetin</p>
+          </div>
+
+          {/* Bekleyen Uyarısı */}
+          {pendingCount > 0 && (
+            <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-2 sm:gap-3">
+              <span className="text-xl sm:text-2xl flex-shrink-0">⏳</span>
+              <div>
+                <p className="font-semibold text-amber-900 text-sm sm:text-base">
+                  {pendingCount} bekleyen talep var
+                </p>
+                <p className="text-xs sm:text-sm text-amber-700">Lütfen en kısa sürede değerlendirin</p>
               </div>
             </div>
+          )}
 
-            <button
-              onClick={load}
-              className="h-11 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 shadow-sm transition-colors text-sm font-semibold"
+          {/* Filtreler */}
+          <div className="mb-4 sm:mb-6 flex flex-col gap-3">
+            <input
+              type="text"
+              placeholder="Restoran, kişi adı veya telefon..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-3 sm:px-4 py-2.5 rounded-lg border border-slate-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm sm:text-base"
+            />
+            
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as DemoRequestStatus | 'ALL')}
+              className="w-full px-3 sm:px-4 py-2.5 rounded-lg border border-slate-200 bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm sm:text-base"
             >
-              Yenile
-            </button>
+              <option value="ALL">Tüm Durumlar</option>
+              <option value="PENDING">⏳ Beklemede</option>
+              <option value="DEMO_CREATED">🎉 Demo Oluşturuldu</option>
+              <option value="FOLLOW_UP">✅ Takip</option>
+              <option value="NEGATIVE">❌ Olumsuz</option>
+            </select>
           </div>
-        </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200/70 overflow-hidden">
+          {/* İçerik */}
           {loading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            </div>
-          ) : emptyState ? (
             <div className="text-center py-12">
-              <p className="text-slate-600 text-base sm:text-lg">Henüz demo talebi yok</p>
+              <div className="inline-block w-8 h-8 border-4 border-slate-200 border-t-orange-500 rounded-full animate-spin" />
+              <p className="mt-4 text-slate-600 text-sm sm:text-base">Yükleniyor...</p>
+            </div>
+          ) : filteredRequests.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-xl border border-slate-200">
+              <p className="text-slate-600 text-sm sm:text-base">Henüz demo talebi yok</p>
             </div>
           ) : (
             <>
-              {/* Mobile */}
-              <div className="block lg:hidden divide-y divide-slate-200/70">
-                {items.map((r) => {
-                  return (
-                    <div key={r.id} className="p-4 sm:p-5 hover:bg-slate-50/70 transition-colors">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <div className="text-[14px] font-semibold text-slate-900 truncate">{r.fullName}</div>
-                          <div className="mt-0.5 text-[12px] text-slate-500 truncate">{r.restaurantName}</div>
-                        </div>
-                        <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[12px] font-semibold ${statusBadge[r.status]}`}>
-                          {statusLabel[r.status]}
-                        </span>
-                      </div>
-
-                      <div className="mt-3 flex flex-wrap items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => openWhatsApp(r.phone, r.fullName, r.restaurantName)}
-                          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer transition-colors"
-                        >
-                          <MessageCircle className="h-4 w-4 text-emerald-600" strokeWidth={2} aria-hidden="true" />
-                          {r.phone}
-                        </button>
-                        <span className="text-[12px] text-slate-500">
-                          {r.restaurantType || '—'} • {r.tableCount || 0} masa
-                        </span>
-                        {r.potential && (
-                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${potentialBadge[r.potential]}`}>
-                            {potentialLabel[r.potential]}
-                          </span>
-                        )}
-                        {r.followUpMonth && (
-                          <span className="text-[12px] text-slate-500 bg-slate-100 px-2 py-1 rounded-md">
-                            📅 {r.followUpMonth}
-                          </span>
-                        )}
-                        <span className="text-[12px] text-slate-500">
-                          {new Date(r.createdAt).toLocaleDateString('tr-TR')}
-                        </span>
-                      </div>
-
-                      <div className="mt-4 flex gap-2">
-                        <button
-                          onClick={() => openModal(r)}
-                          className="flex-1 h-10 px-3 rounded-xl border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 transition-colors text-sm font-semibold"
-                        >
-                          Detay
-                        </button>
-                        <select
-                          value={r.status}
-                          disabled={updatingId === r.id}
-                          onChange={(e) => onChangeStatusOnly(r.id, e.target.value as DemoRequestStatus)}
-                          className="flex-1 h-10 px-3 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-semibold"
-                        >
-                          <option value="PENDING">Beklemede</option>
-                          <option value="CONTACTED">İletişime Geçildi</option>
-                          <option value="DEMO_CREATED">Demo Oluşturuldu</option>
-                          <option value="CANCELLED">İptal</option>
-                        </select>
-                        <button
-                          onClick={() => setDeleteConfirm(r.id)}
-                          disabled={deletingId === r.id}
-                          className="h-10 w-10 rounded-xl border border-red-200 bg-white hover:bg-red-50 text-red-600 hover:text-red-700 disabled:opacity-50 transition-colors"
-                          title="Sil"
-                        >
-                          <Trash2 className="h-4 w-4" strokeWidth={2} />
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
+              {/* Mobil Liste Görünümü */}
+              <div className="lg:hidden space-y-0 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                {filteredRequests.map(request => (
+                  <DemoRequestRow
+                    key={request.id}
+                    request={request}
+                    onUpdate={handleUpdate}
+                    onDelete={handleDelete}
+                  />
+                ))}
               </div>
 
-              {/* Desktop */}
-              <div className="hidden lg:block overflow-hidden">
-                <table className="w-full">
-                  <thead className="bg-slate-50 border-b border-slate-200/70">
-                    <tr>
-                      <th className="text-left py-2 px-2 text-[10px] font-semibold text-slate-600 w-[120px]">Kişi</th>
-                      <th className="text-left py-2 px-2 text-[10px] font-semibold text-slate-600 w-[100px]">Restoran</th>
-                      <th className="text-left py-2 px-2 text-[10px] font-semibold text-slate-600 w-[80px]">Tel</th>
-                      <th className="text-left py-2 px-2 text-[10px] font-semibold text-slate-600 w-[70px]">Tip/Masa</th>
-                      <th className="text-center py-2 px-1 text-[10px] font-semibold text-slate-600 w-[80px]">Potansiyel</th>
-                      <th className="text-center py-2 px-1 text-[10px] font-semibold text-slate-600 w-[60px]">Takip</th>
-                      <th className="text-center py-2 px-1 text-[10px] font-semibold text-slate-600 w-[70px]">Tarih</th>
-                      <th className="text-center py-2 px-1 text-[10px] font-semibold text-slate-600 w-[70px]">Durum</th>
-                      <th className="text-right py-2 px-2 text-[10px] font-semibold text-slate-600 w-[120px]">İşlemler</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {items.map((r) => {
-                      return (
-                        <tr key={r.id} className="border-b border-slate-200/60 hover:bg-slate-50/70 transition-colors">
-                          <td className="py-2 px-2">
-                            <div className="text-[11px] font-semibold text-slate-900 truncate">{r.fullName}</div>
-                            <div className="text-[9px] text-slate-500 truncate">{r.email || '—'}</div>
-                          </td>
-                          <td className="py-2 px-2 text-[10px] text-slate-700 truncate">{r.restaurantName}</td>
-                          <td className="py-2 px-2">
-                            <button
-                              type="button"
-                              onClick={() => openWhatsApp(r.phone, r.fullName, r.restaurantName)}
-                              className="text-[9px] font-semibold text-emerald-600 hover:text-emerald-700 cursor-pointer"
-                              title={r.phone}
-                            >
-                              {r.phone.slice(-7)}
-                            </button>
-                          </td>
-                          <td className="py-2 px-2 text-[9px] text-slate-700">
-                            <div className="truncate">{r.restaurantType || '—'}</div>
-                            <div className="text-[8px] text-slate-500">{r.tableCount || 0} masa</div>
-                          </td>
-                          <td className="py-2 px-1 text-center">
-                            {r.potential ? (
-                              <span className={`inline-block rounded px-1 py-0.5 text-[8px] font-bold ${r.potential === 'HIGH_PROBABILITY' ? 'bg-green-100 text-green-800' : r.potential === 'NEGATIVE' ? 'bg-red-100 text-red-800' : 'bg-purple-100 text-purple-800'}`}>
-                                {r.potential === 'HIGH_PROBABILITY' ? 'YÜKSEK' : r.potential === 'NEGATIVE' ? 'OLMSZ' : 'UZUN'}
-                              </span>
-                            ) : (
-                              <span className="text-[9px] text-slate-400">—</span>
-                            )}
-                          </td>
-                          <td className="py-2 px-1 text-center text-[9px] text-slate-700">
-                            {r.followUpMonth ? r.followUpMonth.split('-')[1] + '/' + r.followUpMonth.split('-')[0].slice(-2) : '—'}
-                          </td>
-                          <td className="py-2 px-1 text-center text-[9px] text-slate-500">
-                            {new Date(r.createdAt).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' })}
-                          </td>
-                          <td className="py-2 px-1 text-center">
-                            <span className={`inline-block rounded px-1 py-0.5 text-[8px] font-bold ${
-                              r.status === 'PENDING' ? 'bg-amber-100 text-amber-800' :
-                              r.status === 'CONTACTED' ? 'bg-blue-100 text-blue-800' :
-                              r.status === 'DEMO_CREATED' ? 'bg-emerald-100 text-emerald-800' :
-                              'bg-rose-100 text-rose-800'
-                            }`}>
-                              {r.status === 'PENDING' ? 'BEKLEME' : 
-                               r.status === 'CONTACTED' ? 'İLETİŞİM' :
-                               r.status === 'DEMO_CREATED' ? 'DEMO' : 'İPTAL'}
-                            </span>
-                          </td>
-                          <td className="py-2 px-2">
-                            <div className="flex justify-end items-center gap-1">
-                              <button
-                                onClick={() => openModal(r)}
-                                className="h-6 px-2 rounded text-blue-600 hover:bg-blue-50 text-[9px] font-semibold border border-blue-200"
-                                title="Düzenle"
-                              >
-                                Düzen
-                              </button>
-                              <button
-                                onClick={() => setDeleteConfirm(r.id)}
-                                disabled={deletingId === r.id}
-                                className="h-6 w-6 rounded text-red-600 hover:bg-red-50 disabled:opacity-50 border border-red-200"
-                                title="Sil"
-                              >
-                                <Trash2 className="h-3 w-3" strokeWidth={2} />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+              {/* Desktop Tablo Görünümü */}
+              <div className="hidden lg:block bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-slate-50 border-b border-slate-200">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                          Restoran Adı
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                          Restoran Tipi
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                          Masa Sayısı
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                          İletişim
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                          Durum
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                          Tarih
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                          İşlem
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredRequests.map(request => (
+                        <DemoRequestRow
+                          key={request.id}
+                          request={request}
+                          onUpdate={handleUpdate}
+                          onDelete={handleDelete}
+                        />
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </>
           )}
         </div>
-
-        {/* Detail modal (recommended) */}
-        {selected && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-slate-900/60" onClick={() => { setSelected(null); setEditMode(false); }} />
-            <div className="relative w-full max-w-2xl rounded-2xl bg-white shadow-soft-lg border border-slate-200/70 overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200/70">
-                <div className="min-w-0">
-                  <div className="text-[14px] font-semibold text-slate-900 truncate">{selected.fullName}</div>
-                  <div className="mt-0.5 text-[12px] text-slate-500 truncate">{selected.restaurantName}</div>
-                </div>
-                <button
-                  onClick={() => { setSelected(null); setEditMode(false); }}
-                  className="h-10 w-10 inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white hover:bg-slate-50"
-                  aria-label="Kapat"
-                >
-                  <X className="h-4 w-4 text-slate-700" strokeWidth={2} aria-hidden="true" />
-                </button>
-              </div>
-
-              <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-                  <div className="text-[12px] font-semibold text-slate-500">Telefon</div>
-                  <div className="mt-1 text-[14px] font-semibold text-slate-900">{selected.phone}</div>
-                </div>
-                <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-                  <div className="text-[12px] font-semibold text-slate-500">E-posta</div>
-                  <div className="mt-1 text-[14px] font-semibold text-slate-900">{selected.email || '—'}</div>
-                </div>
-                <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-                  <div className="text-[12px] font-semibold text-slate-500">Restoran Tipi</div>
-                  <div className="mt-1 text-[14px] font-semibold text-slate-900">{selected.restaurantType || '—'}</div>
-                </div>
-                <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-                  <div className="text-[12px] font-semibold text-slate-500">Masa Sayısı</div>
-                  <div className="mt-1 text-[14px] font-semibold text-slate-900">{selected.tableCount || 0}</div>
-                </div>
-                <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-                  <div className="text-[12px] font-semibold text-slate-500">Potansiyel</div>
-                  <div className="mt-1">
-                    {selected.potential ? (
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[12px] font-semibold ${potentialBadge[selected.potential]}`}>
-                        {potentialLabel[selected.potential]}
-                      </span>
-                    ) : (
-                      <span className="text-[14px] text-slate-400">Belirsiz</span>
-                    )}
-                  </div>
-                </div>
-                <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-                  <div className="text-[12px] font-semibold text-slate-500">Takip Ayı</div>
-                  <div className="mt-1 text-[14px] font-semibold text-slate-900">{selected.followUpMonth || '—'}</div>
-                </div>
-                <div className="sm:col-span-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-                  <div className="flex flex-wrap items-center gap-3 justify-between">
-                    <div>
-                      <div className="text-[12px] font-semibold text-slate-500">Talep Tarihi</div>
-                      <div className="mt-1 text-[14px] font-semibold text-slate-900">{new Date(selected.createdAt).toLocaleString('tr-TR')}</div>
-                    </div>
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[12px] font-semibold ${statusBadge[selected.status]}`}>
-                      {statusLabel[selected.status]}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="px-5 py-4 border-t border-slate-200/70">
-                <div className="flex flex-col gap-4">
-                  {/* WhatsApp Button */}
-                  <button
-                    type="button"
-                    onClick={() => openWhatsApp(selected.phone, selected.fullName, selected.restaurantName)}
-                    className="h-11 px-4 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition-colors text-sm font-semibold inline-flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto"
-                  >
-                    <MessageCircle className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
-                    WhatsApp'tan yaz
-                  </button>
-
-                  {/* Edit Controls */}
-                  {!editMode ? (
-                    <div className="flex flex-col sm:flex-row gap-2">
-                      <select
-                        value={selected.status}
-                        disabled={updatingId === selected.id}
-                        onChange={(e) => onChangeStatusOnly(selected.id, e.target.value as DemoRequestStatus)}
-                        className="h-11 px-3 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-semibold flex-1"
-                      >
-                        <option value="PENDING">Beklemede</option>
-                        <option value="CONTACTED">İletişime Geçildi</option>
-                        <option value="DEMO_CREATED">Demo Oluşturuldu</option>
-                        <option value="CANCELLED">İptal</option>
-                      </select>
-                      <button
-                        onClick={() => startEdit(selected)}
-                        className="h-11 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold"
-                      >
-                        Düzenle
-                      </button>
-                      <button
-                        onClick={() => setDeleteConfirm(selected.id)}
-                        disabled={deletingId === selected.id}
-                        className="h-11 px-4 rounded-xl border border-red-200 bg-white hover:bg-red-50 text-red-600 hover:text-red-700 text-sm font-semibold disabled:opacity-50"
-                      >
-                        Sil
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-[12px] font-semibold text-slate-500 mb-1">Potansiyel</label>
-                          <select
-                            value={tempPotential}
-                            onChange={(e) => setTempPotential(e.target.value as DemoRequestPotential | '')}
-                            className="h-11 w-full px-3 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-semibold"
-                          >
-                            <option value="">Seçiniz</option>
-                            <option value="HIGH_PROBABILITY">Yüksek İhtimal</option>
-                            <option value="NEGATIVE">Olumsuz</option>
-                            <option value="LONG_TERM">Uzun Vade</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-[12px] font-semibold text-slate-500 mb-1">Takip Ayı</label>
-                          <input
-                            type="month"
-                            value={tempFollowUpMonth}
-                            onChange={(e) => setTempFollowUpMonth(e.target.value)}
-                            className="h-11 w-full px-3 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-semibold"
-                          />
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={saveEdit}
-                          disabled={updatingId === selected.id}
-                          className="h-11 px-4 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-sm font-semibold disabled:opacity-50 flex-1 sm:flex-none"
-                        >
-                          Kaydet
-                        </button>
-                        <button
-                          onClick={cancelEdit}
-                          className="h-11 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold flex-1 sm:flex-none"
-                        >
-                          İptal
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Delete Confirmation Modal */}
-        {deleteConfirm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-slate-900/60" onClick={() => setDeleteConfirm(null)} />
-            <div className="relative w-full max-w-md rounded-2xl bg-white shadow-soft-lg border border-slate-200/70 p-6">
-              <div className="text-center">
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-                  <Trash2 className="h-6 w-6 text-red-600" strokeWidth={2} />
-                </div>
-                <div className="mt-3">
-                  <h3 className="text-lg font-semibold text-slate-900">Demo Talebini Sil</h3>
-                  <p className="mt-2 text-sm text-slate-500">
-                    Bu demo talebi kalıcı olarak silinecek. Bu işlem geri alınamaz.
-                  </p>
-                </div>
-              </div>
-              <div className="mt-6 flex gap-3">
-                <button
-                  onClick={() => setDeleteConfirm(null)}
-                  className="flex-1 h-11 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold"
-                >
-                  İptal
-                </button>
-                <button
-                  onClick={() => onDelete(deleteConfirm)}
-                  disabled={deletingId === deleteConfirm}
-                  className="flex-1 h-11 px-4 rounded-xl bg-red-600 text-white hover:bg-red-700 text-sm font-semibold disabled:opacity-50"
-                >
-                  {deletingId === deleteConfirm ? 'Siliniyor...' : 'Sil'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </DashboardLayout>
     </ProtectedRoute>
   );
 }
+
+export default DemoRequestsTable;

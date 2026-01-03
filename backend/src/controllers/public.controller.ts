@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import prisma, { timedQuery, warmupDatabase } from '../config/database';
+import { prisma, warmupDatabase } from '../config/prisma';
 import { ApiError, sendSuccess } from '../utils/response';
 import { slugifyTR } from '../utils/slugify';
 

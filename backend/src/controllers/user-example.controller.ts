@@ -13,7 +13,7 @@
  */
 
 import { Request, Response } from 'express';
-import prisma from '../config/database';
+import { prisma } from '../config/prisma';
 import { logger } from '../services/logger.service';
 
 /**

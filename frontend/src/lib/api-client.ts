@@ -327,9 +327,11 @@ class ApiClient {
   }
 
   async updateDemoRequestStatus(id: string, updateData: { 
-    status: 'PENDING' | 'CONTACTED' | 'DEMO_CREATED' | 'CANCELLED',
-    potential?: 'HIGH_PROBABILITY' | 'NEGATIVE' | 'LONG_TERM',
-    followUpMonth?: string 
+    status: 'PENDING' | 'DEMO_CREATED' | 'FOLLOW_UP' | 'NEGATIVE',
+    potential?: 'HIGH_PROBABILITY' | 'LONG_TERM',
+    followUpMonth?: string | null,
+    membershipStartDate?: string | null,
+    membershipEndDate?: string | null
   }) {
     const { data } = await this.client.patch(`/demo-requests/${id}/status`, updateData);
     return data;

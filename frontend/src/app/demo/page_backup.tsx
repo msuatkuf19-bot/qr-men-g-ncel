@@ -200,20 +200,40 @@ function PhoneMockup() {
               <div className="grid grid-cols-2 gap-2 md:gap-3">
                 {dashboardCards.map((card, i) => (
                   <motion.div
-                    key={i}
+                    key={card.name}
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 1.5 + i * 0.1 }}
-                    className={`bg-gradient-to-br ${card.gradient} p-3 md:p-4 rounded-xl md:rounded-2xl`}
+                    whileHover={{ scale: 1.05 }}
+                    className={`relative h-14 md:h-16 lg:h-20 rounded-lg md:rounded-xl overflow-hidden bg-gradient-to-br ${card.gradient} p-2 md:p-3 cursor-pointer`}
                   >
-                    <span className="text-2xl md:text-3xl">{card.icon}</span>
-                    <p className="mt-1 md:mt-2 text-white text-[10px] md:text-xs font-semibold">{card.name}</p>
+                    <div className="absolute inset-0 bg-black/20" />
+                    <div className="relative h-full flex flex-col justify-between">
+                      <span className="text-lg md:text-xl lg:text-2xl">{card.icon}</span>
+                      <p className="text-white text-[10px] md:text-xs font-semibold">{card.name}</p>
+                    </div>
                   </motion.div>
                 ))}
               </div>
             </motion.div>
           </div>
         </div>
+      </motion.div>
+
+      {/* Floating Elements */}
+      <motion.div
+        animate={{ y: [0, -12, 0], rotate: [0, 5, 0] }}
+        transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+        className="absolute -top-2 -right-2 md:-top-4 md:-right-4 w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center shadow-lg shadow-orange-500/50"
+      >
+        <span className="text-lg md:text-2xl">🚀</span>
+      </motion.div>
+      <motion.div
+        animate={{ y: [0, 12, 0], rotate: [0, -5, 0] }}
+        transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+        className="absolute -bottom-2 -left-2 md:-bottom-4 md:-left-4 w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg shadow-green-500/50"
+      >
+        <span className="text-lg md:text-2xl">✨</span>
       </motion.div>
     </motion.div>
   );
@@ -291,8 +311,8 @@ function StickyFormBand() {
       transition={{ delay: 0.5, duration: 0.6, ease: 'easeOut' }}
       className="relative lg:fixed lg:bottom-0 lg:left-0 lg:right-0 z-50"
     >
-      <div className="demo-form-band relative backdrop-blur-2xl bg-slate-900/95 border-t border-white/10 shadow-2xl">
-        <div className="container mx-auto px-4 py-6 lg:py-8">
+      <div className="demo-form-band relative bg-[#05070a]/95 backdrop-blur-xl border-t-2 border-[#EF742C]">
+        <div className="container mx-auto px-4 py-4 md:py-6 lg:py-8">
           <AnimatePresence mode="wait">
             {isSubmitted ? (
               <motion.div
@@ -300,40 +320,41 @@ function StickyFormBand() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="text-center py-6"
+                className="text-center py-4"
               >
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: 'spring', stiffness: 200, damping: 10 }}
-                  className="w-20 h-20 mx-auto mb-4 rounded-full bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center"
+                  className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500 flex items-center justify-center"
                 >
-                  <svg className="w-10 h-10 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                   </svg>
                 </motion.div>
-                <h3 className="text-2xl font-bold text-white mb-2">✅ Demo talebiniz alındı!</h3>
-                <p className="text-gray-400 max-w-md mx-auto">
-                  Panelin hazırlanıyor. En kısa sürede WhatsApp üzerinden iletişime geçeceğiz.
-                </p>
+                <h3 className="text-xl font-bold text-white mb-2">Demo talebin alındı, panelin hazırlanıyor</h3>
+                <p className="text-gray-400">En kısa sürede WhatsApp üzerinden iletişime geçeceğiz.</p>
               </motion.div>
             ) : (
               <motion.div
                 key="form"
                 initial={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
+                className="flex flex-col lg:flex-row items-start lg:items-center gap-6 lg:gap-12"
               >
-                {/* Header */}
-                <div className="text-center lg:text-left mb-6 lg:mb-8">
-                  <h2 className="text-2xl lg:text-3xl font-bold text-white mb-2">
-                    Sana özel <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-500">QR Menü demo paneli</span> oluşturalım
-                  </h2>
-                  <p className="text-gray-400 text-sm lg:text-base">
-                    1 dakikada formu doldur, demo panelin otomatik oluşsun. Tamamen ücretsiz.
+                {/* Left - Text */}
+                <div className="flex-shrink-0 lg:max-w-sm">
+                  <h3 className="text-lg md:text-xl lg:text-2xl font-bold text-white mb-1 md:mb-2">
+                    Sana özel{' '}
+                    <span className="text-[#EF742C]">QR Menü demo paneli</span>{' '}
+                    oluşturalım
+                  </h3>
+                  <p className="text-gray-400 text-xs md:text-sm">
+                    1 dakikada formu doldur, demo panelin otomatik oluşsun.
                   </p>
                   {isSubmitting && (
-                    <div className="mt-4 max-w-md mx-auto lg:mx-0">
-                      <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                    <div className="mt-4">
+                      <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
                         <motion.div
                           className="h-full bg-gradient-to-r from-orange-500 to-pink-500"
                           initial={{ width: 0 }}
@@ -341,120 +362,97 @@ function StickyFormBand() {
                           transition={{ duration: 0.2 }}
                         />
                       </div>
-                      <p className="text-orange-400 text-xs mt-2 font-medium">Hazırlanıyor... {progress}%</p>
+                      <p className="text-orange-400 text-xs mt-2">Hazırlanıyor... {progress}%</p>
                     </div>
                   )}
                 </div>
 
-                {/* Form */}
-                <form onSubmit={handleSubmit} className="max-w-6xl mx-auto">
+                {/* Right - Form */}
+                <form onSubmit={handleSubmit} className="flex-1 w-full">
                   {submitError && (
-                    <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300 backdrop-blur">
-                      ❌ {submitError}
+                    <div className="mb-3 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                      {submitError}
                     </div>
                   )}
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <label className="block text-xs font-medium text-gray-400 px-1">Ad Soyad *</label>
-                      <input
-                        type="text"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        placeholder="Örn: Ahmet Yılmaz"
-                        required
-                        disabled={isSubmitting}
-                        className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-orange-500/50 focus:ring-2 focus:ring-orange-500/20 transition-all disabled:opacity-50 backdrop-blur"
-                      />
-                    </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-3">
+                    {/* Row 1 */}
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      placeholder="Ad Soyad"
+                      required
+                      disabled={isSubmitting}
+                      className="w-full px-3 md:px-4 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#EF742C] transition-all text-xs md:text-sm disabled:opacity-50"
+                    />
+                    <input
+                      type="text"
+                      value={formData.restaurant}
+                      onChange={(e) => setFormData({ ...formData, restaurant: e.target.value })}
+                      placeholder="Restoran Adı"
+                      required
+                      disabled={isSubmitting}
+                      className="w-full px-3 md:px-4 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#EF742C] transition-all text-xs md:text-sm disabled:opacity-50"
+                    />
+                    <input
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      placeholder="Telefon / WhatsApp"
+                      required
+                      disabled={isSubmitting}
+                      className="w-full px-3 md:px-4 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#EF742C] transition-all text-xs md:text-sm disabled:opacity-50"
+                    />
 
-                    <div className="space-y-2">
-                      <label className="block text-xs font-medium text-gray-400 px-1">Restoran Adı *</label>
-                      <input
-                        type="text"
-                        value={formData.restaurant}
-                        onChange={(e) => setFormData({ ...formData, restaurant: e.target.value })}
-                        placeholder="Örn: Lezzet Durağı"
-                        required
-                        disabled={isSubmitting}
-                        className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-orange-500/50 focus:ring-2 focus:ring-orange-500/20 transition-all disabled:opacity-50 backdrop-blur"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="block text-xs font-medium text-gray-400 px-1">Telefon / WhatsApp *</label>
-                      <input
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        placeholder="05XX XXX XX XX"
-                        required
-                        disabled={isSubmitting}
-                        className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-orange-500/50 focus:ring-2 focus:ring-orange-500/20 transition-all disabled:opacity-50 backdrop-blur"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="block text-xs font-medium text-gray-400 px-1">E-posta</label>
-                      <input
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        placeholder="ornek@email.com (opsiyonel)"
-                        disabled={isSubmitting}
-                        className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-orange-500/50 focus:ring-2 focus:ring-orange-500/20 transition-all disabled:opacity-50 backdrop-blur"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="block text-xs font-medium text-gray-400 px-1">Restoran Tipi *</label>
-                      <select
-                        value={formData.type}
-                        onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                        required
-                        disabled={isSubmitting}
-                        className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-orange-500/50 focus:ring-2 focus:ring-orange-500/20 transition-all disabled:opacity-50 appearance-none backdrop-blur"
-                        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 16px center', backgroundSize: '18px' }}
-                      >
-                        <option value="" className="bg-slate-900">Seçiniz</option>
-                        {restaurantTypes.map((type) => (
-                          <option key={type} value={type} className="bg-slate-900">{type}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="block text-xs font-medium text-gray-400 px-1">Masa Sayısı</label>
-                      <input
-                        type="number"
-                        value={formData.tables}
-                        onChange={(e) => setFormData({ ...formData, tables: e.target.value })}
-                        placeholder="Örn: 25"
-                        min="1"
-                        max="500"
-                        disabled={isSubmitting}
-                        className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-orange-500/50 focus:ring-2 focus:ring-orange-500/20 transition-all disabled:opacity-50 backdrop-blur"
-                      />
-                    </div>
+                    {/* Row 2 */}
+                    <input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      placeholder="E-posta (opsiyonel)"
+                      disabled={isSubmitting}
+                      className="w-full px-3 md:px-4 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#EF742C] transition-all text-xs md:text-sm disabled:opacity-50"
+                    />
+                    <select
+                      value={formData.type}
+                      onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                      required
+                      disabled={isSubmitting}
+                      className="w-full px-3 md:px-4 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-white focus:outline-none focus:border-[#EF742C] transition-all text-xs md:text-sm disabled:opacity-50 appearance-none"
+                      style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', backgroundSize: '16px' }}
+                    >
+                      <option value="" className="bg-gray-900">Restoran Tipi</option>
+                      {restaurantTypes.map((type) => (
+                        <option key={type} value={type} className="bg-gray-900">{type}</option>
+                      ))}
+                    </select>
+                    <input
+                      type="number"
+                      value={formData.tables}
+                      onChange={(e) => setFormData({ ...formData, tables: e.target.value })}
+                      placeholder="Masa Sayısı"
+                      min="1"
+                      max="500"
+                      disabled={isSubmitting}
+                      className="w-full px-3 md:px-4 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#EF742C] transition-all text-xs md:text-sm disabled:opacity-50"
+                    />
                   </div>
 
                   {/* Submit Button */}
-                  <div className="mt-6 flex justify-center lg:justify-end">
+                  <div className="mt-3 md:mt-4 flex justify-center md:justify-end">
                     <motion.button
                       type="submit"
                       disabled={isSubmitting}
                       whileHover={{ scale: isSubmitting ? 1 : 1.02 }}
                       whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
-                      className="relative w-full lg:w-auto px-8 py-4 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-bold rounded-xl shadow-lg shadow-orange-500/25 hover:shadow-xl hover:shadow-orange-500/40 transition-all overflow-hidden disabled:opacity-70 disabled:cursor-not-allowed group"
+                      className="relative w-full md:w-auto px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-[#EF742C] to-[#ff9a5a] text-black text-sm md:text-base font-bold rounded-lg md:rounded-xl shadow-lg shadow-orange-500/30 hover:shadow-xl hover:shadow-orange-500/40 transition-all overflow-hidden disabled:opacity-70 disabled:cursor-not-allowed"
                     >
-                      {/* Shine effect */}
                       <motion.div
                         className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                        animate={{ x: ['-100%', '200%'] }}
+                        animate={{ x: ['-100%', '100%'] }}
                         transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
                       />
-                      
-                      <span className="relative flex items-center justify-center gap-2.5 text-base">
+                      <span className="relative flex items-center justify-center gap-2">
                         {isSubmitting ? (
                           <>
                             <motion.div
@@ -469,11 +467,8 @@ function StickyFormBand() {
                           </>
                         ) : (
                           <>
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                            </svg>
                             Demo Panelimi Oluştur
-                            <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                             </svg>
                           </>

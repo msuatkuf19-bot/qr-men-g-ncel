@@ -1,11 +1,10 @@
 import { Response, NextFunction } from 'express';
-import sharp from 'sharp';
 import path from 'path';
 import fs from 'fs';
-import cloudinary from '../config/cloudinary';
+import { getCloudinary } from '../config/cloudinary';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { sendSuccess, ApiError } from '../utils/response';
-import prisma from '../config/database';
+import { prisma } from '../config/prisma';
 
 // PostgreSQL ImageType enum values
 const ImageType = {
@@ -40,6 +39,9 @@ export const uploadImage = async (
     const optimizedFilename = `optimized-${filename}`;
     const optimizedPath = path.join(path.dirname(originalPath), optimizedFilename);
 
+    // Lazy load Sharp for image optimization
+    const sharp = (await import('sharp')).default;
+
     // Sharp ile görsel optimizasyonu
     const optimizedBuffer = await sharp(originalPath)
       .resize(800, 800, {
@@ -52,6 +54,9 @@ export const uploadImage = async (
     // Save optimized image temporarily
     fs.writeFileSync(optimizedPath, optimizedBuffer);
 
+    // Lazy load Cloudinary and upload
+    const cloudinary = await getCloudinary();
+    
     // Upload to Cloudinary
     const uploadResult = await new Promise<any>((resolve, reject) => {
       cloudinary.uploader.upload_stream(

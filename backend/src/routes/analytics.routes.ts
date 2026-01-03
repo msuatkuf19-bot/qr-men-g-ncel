@@ -6,6 +6,7 @@ import {
   getSuperAdminOverview,
   getDashboard,
   getAnalytics,
+  getDashboardSummary,
 } from '../controllers/analytics.controller';
 import { authenticate, authorize } from '../middlewares/auth.middleware';
 
@@ -17,6 +18,9 @@ router.post('/product-view', trackProductView);
 
 // Authenticated routes
 router.use(authenticate);
+
+// Optimized lightweight endpoint for post-login
+router.get('/summary', authorize('RESTAURANT_ADMIN'), getDashboardSummary);
 
 // Restaurant analytics (restaurant admin + super admin)
 router.get('/restaurant/:restaurantId/overview', authorize('SUPER_ADMIN', 'RESTAURANT_ADMIN'), getRestaurantOverview);

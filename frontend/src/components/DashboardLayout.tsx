@@ -190,6 +190,21 @@ export function DashboardLayout({ children, title }: DashboardLayoutProps) {
                 icon={<ClipboardList size={20} strokeWidth={2} />}
                 label="Demo Talepleri"
               />
+              <SidebarLink
+                href="/admin/active-memberships"
+                icon={<Users size={20} strokeWidth={2} />}
+                label="Aktif Üyelikler"
+              />
+              <SidebarLink
+                href="/admin/inactive-memberships"
+                icon={<Users size={20} strokeWidth={2} />}
+                label="Pasif Üyelikler"
+              />
+              <SidebarLink
+                href="/admin/demo-memberships"
+                icon={<ClipboardList size={20} strokeWidth={2} />}
+                label="Demo Üyelikleri"
+              />
             </>
           )}
 
