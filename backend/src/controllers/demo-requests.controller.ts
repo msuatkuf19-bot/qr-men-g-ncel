@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import prisma from '../config/prisma';
 import { ApiError } from '../utils/response';
 import { DemoRequestStatus } from '@prisma/client';
+import { sendDemoRequestNotification } from '../lib/email/sendDemoRequestNotification';
 
 // Potansiyel Durum ENUM - tek kaynak
 const PotentialStatus = {
@@ -75,7 +76,7 @@ export const createDemoRequest = async (req: Request, res: Response, next: NextF
       throw new ApiError(400, 'Masa sayısı geçersiz');
     }
 
-    await prisma.demoRequest.create({
+    const newDemoRequest = await prisma.demoRequest.create({
       data: {
         fullName: String(fullName).trim(),
         restaurantName: String(restaurantName).trim(),
@@ -86,6 +87,21 @@ export const createDemoRequest = async (req: Request, res: Response, next: NextF
         status: DemoRequestStatus.PENDING,
         potentialStatus: PotentialStatus.PENDING as any,
       },
+    });
+
+    // Mail bildirimini async gönder (kayıt işlemini bloklamaz)
+    sendDemoRequestNotification({
+      restaurantName: newDemoRequest.restaurantName,
+      fullName: newDemoRequest.fullName,
+      phone: newDemoRequest.phone,
+      email: newDemoRequest.email,
+      restaurantType: newDemoRequest.restaurantType,
+      tableCount: newDemoRequest.tableCount,
+      potentialStatus: newDemoRequest.potentialStatus || PotentialStatus.PENDING,
+      createdAt: newDemoRequest.createdAt,
+    }).catch(err => {
+      // Mail gönderim hatası kayıt işlemini etkilemez
+      console.error('[DEMO REQUEST] Mail notification failed:', err);
     });
 
     return res.status(201).json({
