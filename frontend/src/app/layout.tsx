@@ -11,8 +11,11 @@ export const metadata: Metadata = {
   title: 'Menü Ben - Dijital QR Menü Sistemi',
   description: 'Menü Ben - Restoran menü yönetimi ve QR kod erişim sistemi',
   icons: {
-    icon: '/benmedya.png',
-    shortcut: '/benmedya.png',
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/benmedya.png', sizes: 'any' },
+    ],
+    shortcut: '/favicon.ico',
     apple: '/benmedya.png',
   },
 };
