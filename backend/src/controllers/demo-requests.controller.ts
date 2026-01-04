@@ -132,7 +132,7 @@ export const listDemoRequests = async (req: Request, res: Response, next: NextFu
 export const updateDemoRequestStatus = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const { potentialStatus, followUpMonth } = req.body ?? {};
+    const { potentialStatus, followUpMonth, notes } = req.body ?? {};
 
     if (!id) {
       throw new ApiError(400, 'ID gerekli');
@@ -162,9 +162,22 @@ export const updateDemoRequestStatus = async (req: Request, res: Response, next:
       }
     }
 
+    // Validate notes if provided
+    let nextNotes: string | undefined | null;
+    if (notes !== undefined) {
+      if (notes === null || notes === '') {
+        nextNotes = null;
+      } else if (typeof notes === 'string') {
+        nextNotes = notes.trim();
+      }
+    }
+
     const updateData: any = { potentialStatus: nextStatus as any };
     if (nextFollowUpMonth !== undefined) {
       updateData.followUpMonth = nextFollowUpMonth;
+    }
+    if (nextNotes !== undefined) {
+      updateData.notes = nextNotes;
     }
 
     const updated = await prisma.demoRequest.update({

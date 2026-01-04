@@ -29,6 +29,7 @@ interface DemoRequest {
   tableCount: number;
   potentialStatus: PotentialStatus;
   followUpMonth?: string | null;
+  notes?: string | null;
   createdAt: string;
 }
 
@@ -70,7 +71,7 @@ function DemoRequestRow({ request, onUpdate, onDelete }: {
   const [isExpanded, setIsExpanded] = useState(false);
   const [localPotentialStatus, setLocalPotentialStatus] = useState<PotentialStatus>(request.potentialStatus || 'PENDING');
   const [localFollowUpMonth, setLocalFollowUpMonth] = useState(request.followUpMonth || '');
-  const [localNotes, setLocalNotes] = useState('');
+  const [localNotes, setLocalNotes] = useState(request.notes || '');
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
@@ -80,11 +81,13 @@ function DemoRequestRow({ request, onUpdate, onDelete }: {
       await apiClient.updateDemoRequestStatus(request.id, {
         potentialStatus: localPotentialStatus,
         followUpMonth: localFollowUpMonth || null,
+        notes: localNotes || null,
       });
       
       onUpdate(request.id, {
         potentialStatus: localPotentialStatus,
         followUpMonth: localFollowUpMonth || null,
+        notes: localNotes || null,
       });
       
       toast.success('Durum güncellendi', { duration: 2000 });

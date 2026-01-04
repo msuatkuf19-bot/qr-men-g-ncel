@@ -329,6 +329,7 @@ class ApiClient {
   async updateDemoRequestStatus(id: string, updateData: { 
     potentialStatus: string,
     followUpMonth?: string | null,
+    notes?: string | null,
   }) {
     const { data } = await this.client.patch(`/demo-requests/${id}/status`, updateData);
     return data;

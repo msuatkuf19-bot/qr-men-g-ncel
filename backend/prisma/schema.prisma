@@ -214,6 +214,7 @@ model DemoRequest {
   potential           DemoRequestPotential?
   potentialStatus     PotentialStatus?      // Yeni kolon
   followUpMonth       String?               // Takip tarihi (YYYY-MM-DD format)
+  notes               String?               // Satış süreci notları
   membershipStartDate String?
   membershipEndDate   String?
   createdAt           DateTime              @default(now())
