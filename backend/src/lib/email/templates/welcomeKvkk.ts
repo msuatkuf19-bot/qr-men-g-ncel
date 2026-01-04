@@ -147,7 +147,10 @@ export const getWelcomeKvkkEmailTemplate = (data: WelcomeEmailData) => {
                   <td style="padding: 24px;">
                     <p style="margin: 0 0 16px 0; color: #94a3b8; font-size: 14px; font-weight: 600;">📋 KVKK Bilgilendirmesi</p>
                     <p style="margin: 0 0 12px 0; color: #64748b; font-size: 13px; line-height: 1.6;">
-                      Bu e-posta, Menü Ben hizmeti kapsamında hesabınız ve restoran kaydınız oluşturulduğu için gönderilmiştir. Kişisel verileriniz hizmetin sunulması, iletişim kurulması ve operasyonel süreçler için işlenebilir.
+                      Bu e-posta, Menü Ben (QR Kod) hizmeti kapsamında adınıza bir kullanıcı hesabı ve restoran kaydı oluşturulması nedeniyle gönderilmiştir.
+                    </p>
+                    <p style="margin: 0 0 12px 0; color: #64748b; font-size: 13px; line-height: 1.6;">
+                      Kişisel verileriniz ve işletme verileriniz; hizmetin mevzuata uygun, eksiksiz ve sağlıklı bir şekilde sunulması, müşterilerinizin işletmenizle hızlı ve etkin iletişim kurabilmesi ile operasyonel süreçlerin yürütülmesi amaçlarıyla, 6698 sayılı Kişisel Verilerin Korunması Kanunu ("KVKK") kapsamında işlenmektedir.
                     </p>
                     <p style="margin: 0; color: #64748b; font-size: 12px;">
                       KVKK hakları için: <a href="mailto:${kvkkContactEmail}" style="color: #EF742C; text-decoration: none;">${kvkkContactEmail}</a> | 
@@ -205,10 +208,11 @@ HIZLI BAŞLANGIÇ
 ━━━━━━━━━━━━━━━━━━━━━━
 KVKK BİLGİLENDİRMESİ
 ━━━━━━━━━━━━━━━━━━━━━━
-Bu e-posta, Menü Ben hizmeti kapsamında hesabınız ve restoran kaydınız oluşturulduğu için gönderilmiştir. Kişisel verileriniz hizmetin sunulması, iletişim kurulması ve operasyonel süreçler için işlenebilir.
+Bu e-posta, Menü Ben (QR Kod) hizmeti kapsamında adınıza bir kullanıcı hesabı ve restoran kaydı oluşturulması nedeniyle gönderilmiştir.
 
-KVKK: ${kvkkContactEmail}
-Destek: ${supportEmail}
+Kişisel verileriniz ve işletme verileriniz; hizmetin mevzuata uygun, eksiksiz ve sağlıklı bir şekilde sunulması, müşterilerinizin işletmenizle hızlı ve etkin iletişim kurabilmesi ile operasyonel süreçlerin yürütülmesi amaçlarıyla, 6698 sayılı Kişisel Verilerin Korunması Kanunu ("KVKK") kapsamında işlenmektedir.
+
+KVKK hakları için: ${kvkkContactEmail} | Destek: ${supportEmail}
 
 ━━━━━━━━━━━━━━━━━━━━━━
 
