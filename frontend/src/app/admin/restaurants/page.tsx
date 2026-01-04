@@ -16,6 +16,8 @@ interface Restaurant {
   address?: string;
   phone?: string;
   email?: string;
+  membershipStartDate?: string | null;
+  membershipEndDate?: string | null;
   owner: {
     name: string;
     email: string;
