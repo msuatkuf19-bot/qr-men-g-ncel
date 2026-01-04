@@ -27,6 +27,21 @@ export default function RootLayout({
 }) {
   return (
     <html lang="tr" data-theme="dark">
+      <head>
+        {/* Google tag (gtag.js) */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=AW-17852172573"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'AW-17852172573');
+          `}
+        </Script>
+      </head>
       <body className={inter.className}>
         <Script id="theme-init" strategy="beforeInteractive">
           {`(function(){
