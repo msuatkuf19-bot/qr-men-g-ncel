@@ -20,10 +20,11 @@ const getBaseUrl = (): string => {
 };
 
 /**
- * Logo URL - public/benmedya.png dosyası için tam URL
+ * Logo URL - Direkt Cloudinary veya sabit URL
  */
 const getLogoUrl = (): string => {
-  return `${getBaseUrl()}/benmedya.png`;
+  // Cloudinary veya CDN URL'i kullan
+  return 'https://res.cloudinary.com/dslvlxv32/image/upload/v1735506735/logos/benmedya_nf3lsj.png';
 };
 
 export const getWelcomeKvkkEmailTemplate = (data: WelcomeEmailData) => {
@@ -33,7 +34,7 @@ export const getWelcomeKvkkEmailTemplate = (data: WelcomeEmailData) => {
   const supportEmail = process.env.SUPPORT_EMAIL || 'destek@menuben.com';
   const logoUrl = getLogoUrl();
   const currentYear = new Date().getFullYear();
-  const panelUrl = loginUrl || `${getBaseUrl()}/login`;
+  const panelUrl = 'https://www.menuben.com/'; // Sabit panel URL
 
   // HTML Template - Modern Dark Theme
   const html = `
