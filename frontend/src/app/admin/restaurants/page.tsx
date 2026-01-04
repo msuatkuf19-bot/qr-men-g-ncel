@@ -55,6 +55,8 @@ export default function AdminRestaurants() {
     ownerEmail: '',
     ownerName: '',
     ownerPassword: '',
+    membershipStartDate: '',
+    membershipEndDate: '',
   });
 
   useEffect(() => {
@@ -139,6 +141,22 @@ export default function AdminRestaurants() {
         return;
       }
 
+      // Üyelik tarihleri validasyonu (sadece yeni restoran oluştururken)
+      if (!editingRestaurant) {
+        if (!formData.membershipStartDate || !formData.membershipEndDate) {
+          alert('Üyelik başlangıç ve bitiş tarihleri zorunludur');
+          return;
+        }
+
+        const startDate = new Date(formData.membershipStartDate);
+        const endDate = new Date(formData.membershipEndDate);
+
+        if (endDate < startDate) {
+          alert('Bitiş tarihi başlangıç tarihinden önce olamaz');
+          return;
+        }
+      }
+
       if (editingRestaurant) {
         await apiClient.updateRestaurant(editingRestaurant.id, { ...formData, slug: normalizedSlug });
       } else {
@@ -195,6 +213,8 @@ export default function AdminRestaurants() {
       ownerEmail: '',
       ownerName: '',
       ownerPassword: '',
+      membershipStartDate: '',
+      membershipEndDate: '',
     });
   };
 
@@ -527,6 +547,38 @@ export default function AdminRestaurants() {
                       />
                     </div>
                   </div>
+
+                  {!editingRestaurant && (
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Üyelik Başlangıç Tarihi *
+                        </label>
+                        <input
+                          type="date"
+                          required
+                          value={formData.membershipStartDate}
+                          onChange={(e) => setFormData({ ...formData, membershipStartDate: e.target.value })}
+                          className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                          placeholder="gg.aa.yyyy"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Üyelik Bitiş Tarihi *
+                        </label>
+                        <input
+                          type="date"
+                          required
+                          value={formData.membershipEndDate}
+                          onChange={(e) => setFormData({ ...formData, membershipEndDate: e.target.value })}
+                          min={formData.membershipStartDate || undefined}
+                          className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                          placeholder="gg.aa.yyyy"
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Adres</label>

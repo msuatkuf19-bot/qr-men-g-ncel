@@ -48,66 +48,59 @@ export class MembershipService {
     filters: MembershipFilters = {}
   ): Promise<{ memberships: MembershipListItem[]; total: number }> {
     try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
       const where: any = {
-        status: 'ACTIVE',
+        isActive: true,
+        membershipStartDate: { lte: today },
+        membershipEndDate: { gte: today },
       };
 
-      if (filters.plan) {
-        where.plan = filters.plan;
+      if (filters.search) {
+        where.OR = [
+          { name: { contains: filters.search, mode: 'insensitive' } },
+          { owner: { name: { contains: filters.search, mode: 'insensitive' } } },
+          { owner: { email: { contains: filters.search, mode: 'insensitive' } } },
+        ];
       }
 
       if (filters.dateFrom || filters.dateTo) {
-        where.startDate = {};
-        if (filters.dateFrom) where.startDate.gte = filters.dateFrom;
-        if (filters.dateTo) where.startDate.lte = filters.dateTo;
+        where.membershipStartDate = {};
+        if (filters.dateFrom) where.membershipStartDate.gte = filters.dateFrom;
+        if (filters.dateTo) where.membershipStartDate.lte = filters.dateTo;
       }
 
-      const searchWhere = filters.search
-        ? {
-            restaurant: {
-              OR: [
-                { name: { contains: filters.search, mode: 'insensitive' } },
-                { owner: { name: { contains: filters.search, mode: 'insensitive' } } },
-                { owner: { email: { contains: filters.search, mode: 'insensitive' } } },
-              ],
-            },
-          }
-        : {};
-
-      const [memberships, total] = await Promise.all([
-        prisma.membership.findMany({
-          where: { ...where, ...searchWhere },
+      const [restaurants, total] = await Promise.all([
+        prisma.restaurant.findMany({
+          where,
           include: {
-            restaurant: {
-              include: {
-                owner: {
-                  select: { name: true, email: true },
-                },
-              },
+            owner: {
+              select: { name: true, email: true },
             },
           },
-          orderBy: { endDate: 'asc' },
+          orderBy: { membershipEndDate: 'asc' },
           skip: (page - 1) * limit,
           take: limit,
         }),
-        prisma.membership.count({ where: { ...where, ...searchWhere } }),
+        prisma.restaurant.count({ where }),
       ]);
 
-      const items: MembershipListItem[] = memberships.map((m) => ({
-        id: m.id,
-        restaurantId: m.restaurantId,
-        restaurantName: m.restaurant.name,
-        restaurantSlug: m.restaurant.slug,
-        ownerName: m.restaurant.owner.name,
-        ownerEmail: m.restaurant.owner.email,
-        plan: m.plan,
-        status: m.status,
-        startDate: m.startDate,
-        endDate: m.endDate,
-        passiveDate: m.passiveDate,
-        passiveReason: m.passiveReason,
-        lastActivity: m.lastActivity,
-        createdAt: m.createdAt,
+      const items: MembershipListItem[] = restaurants.map((r) => ({
+        id: r.id,
+        restaurantId: r.id,
+        restaurantName: r.name,
+        restaurantSlug: r.slug,
+        ownerName: r.owner.name,
+        ownerEmail: r.owner.email,
+        plan: 'Premium', // Default plan
+        status: 'ACTIVE',
+        startDate: r.membershipStartDate || r.createdAt,
+        endDate: r.membershipEndDate || null,
+        passiveDate: null,
+        passiveReason: null,
+        lastActivity: r.updatedAt,
+        createdAt: r.createdAt,
       }));
 
       return { memberships: items, total };
@@ -209,39 +202,33 @@ export class MembershipService {
       const in7Days = new Date();
       in7Days.setDate(in7Days.getDate() + 7);
 
-      const [totalActive, startedToday, expiringIn7Days, planCounts] = await Promise.all([
-        prisma.membership.count({ where: { status: 'ACTIVE' } }),
-        prisma.membership.count({
+      const [totalActive, startedToday, expiringIn7Days] = await Promise.all([
+        prisma.restaurant.count({ 
+          where: { 
+            isActive: true,
+            membershipStartDate: { lte: today },
+            membershipEndDate: { gte: today }
+          } 
+        }),
+        prisma.restaurant.count({
           where: {
-            status: 'ACTIVE',
-            startDate: { gte: today, lt: tomorrow },
+            isActive: true,
+            membershipStartDate: { gte: today, lt: tomorrow },
           },
         }),
-        prisma.membership.count({
+        prisma.restaurant.count({
           where: {
-            status: 'ACTIVE',
-            endDate: { gte: new Date(), lte: in7Days },
+            isActive: true,
+            membershipEndDate: { gte: today, lte: in7Days },
           },
-        }),
-        prisma.membership.groupBy({
-          by: ['plan'],
-          where: { status: 'ACTIVE' },
-          _count: true,
         }),
       ]);
-
-      const mostUsedPlan =
-        planCounts.length > 0
-          ? planCounts.reduce((prev, current) =>
-              prev._count > current._count ? prev : current
-            ).plan
-          : 'N/A';
 
       return {
         totalActive,
         startedToday,
         expiringIn7Days,
-        mostUsedPlan,
+        mostUsedPlan: 'Premium',
       };
     } catch (error: any) {
       logger.error('Error getting active stats:', error);

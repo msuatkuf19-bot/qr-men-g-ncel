@@ -171,6 +171,8 @@ model Restaurant {
   themeColor          String?               @default("#3B82F6")
   themeSettings       String?
   isActive            Boolean               @default(true)
+  membershipStartDate DateTime?
+  membershipEndDate   DateTime?
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
   ownerId             String
@@ -185,6 +187,7 @@ model Restaurant {
 
   @@index([ownerId])
   @@index([slug])
+  @@index([membershipEndDate])
   @@map("restaurants")
 }
 

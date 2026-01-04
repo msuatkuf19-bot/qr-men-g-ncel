@@ -102,7 +102,25 @@ export const createRestaurant = async (
       ownerName,
       ownerPassword,
       themeColor,
+      membershipStartDate,
+      membershipEndDate,
     } = req.body;
+
+    // Üyelik tarihleri validasyonu
+    if (!membershipStartDate || !membershipEndDate) {
+      throw new ApiError(400, 'Üyelik başlangıç ve bitiş tarihleri zorunludur');
+    }
+
+    const startDate = new Date(membershipStartDate);
+    const endDate = new Date(membershipEndDate);
+
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      throw new ApiError(400, 'Geçersiz tarih formatı');
+    }
+
+    if (endDate < startDate) {
+      throw new ApiError(400, 'Bitiş tarihi başlangıç tarihinden önce olamaz');
+    }
 
     // Slug kontrolü
     const existingRestaurant = await prisma.restaurant.findUnique({
@@ -158,6 +176,8 @@ export const createRestaurant = async (
         phone,
         email,
         themeColor,
+        membershipStartDate: startDate,
+        membershipEndDate: endDate,
         ownerId: owner.id,
       },
       include: {
