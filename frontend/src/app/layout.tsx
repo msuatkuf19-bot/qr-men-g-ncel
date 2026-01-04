@@ -10,6 +10,11 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'Menü Ben - Dijital QR Menü Sistemi',
   description: 'Menü Ben - Restoran menü yönetimi ve QR kod erişim sistemi',
+  icons: {
+    icon: '/benmedya.png',
+    shortcut: '/benmedya.png',
+    apple: '/benmedya.png',
+  },
 };
 
 export default function RootLayout({
