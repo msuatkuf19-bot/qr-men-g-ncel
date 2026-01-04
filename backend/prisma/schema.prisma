@@ -213,7 +213,7 @@ model DemoRequest {
   status              DemoRequestStatus     @default(PENDING)
   potential           DemoRequestPotential?
   potentialStatus     PotentialStatus?      // Yeni kolon
-  followUpMonth       String?
+  followUpMonth       String?               // Takip tarihi (YYYY-MM-DD format)
   membershipStartDate String?
   membershipEndDate   String?
   createdAt           DateTime              @default(now())

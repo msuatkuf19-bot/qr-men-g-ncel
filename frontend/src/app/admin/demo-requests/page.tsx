@@ -45,15 +45,6 @@ const potentialStatusConfig: Record<PotentialStatus, { label: string; color: str
   NEGATIVE: { label: 'Olumsuz', color: 'bg-rose-50 text-rose-700 border-rose-200', icon: '❌' },
 };
 
-// Takip ayı seçenekleri
-const followUpMonthOptions = [
-  { value: '', label: 'Seçiniz' },
-  { value: 'THIS_MONTH', label: 'Bu Ay' },
-  { value: 'NEXT_MONTH', label: 'Önümüzdeki Ay' },
-  { value: '2_MONTHS', label: '2 Ay Sonra' },
-  { value: 'LONG_TERM', label: 'Uzun Vade' },
-];
-
 // WhatsApp ile iletişime geç - AYNEN KORUNDU
 const openWhatsApp = (phone: string, fullName: string, restaurantName: string) => {
   const digits = normalizeTRPhoneToWaDigits(phone);
@@ -269,18 +260,13 @@ function DemoRequestRow({ request, onUpdate, onDelete }: {
                     </div>
                     
                     <div>
-                      <span className="text-xs text-slate-500 block mb-2">Takip Ayı</span>
-                      <select
+                      <span className="text-xs text-slate-500 block mb-2">Takip Tarihi</span>
+                      <input
+                        type="date"
                         value={localFollowUpMonth}
                         onChange={(e) => handleFollowUpMonthChange(e.target.value)}
-                        className="w-full px-3 py-2.5 rounded-lg text-sm border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none cursor-pointer"
-                      >
-                        {followUpMonthOptions.map((option) => (
-                          <option key={option.value} value={option.value} className="text-slate-900">
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
+                        className="w-full px-3 py-2.5 rounded-lg text-sm border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
+                      />
                     </div>
                   </div>
                 </div>
@@ -505,22 +491,17 @@ function DemoRequestRow({ request, onUpdate, onDelete }: {
                         </div>
                       </div>
 
-                      {/* Takip Ayı */}
+                      {/* Takip Tarihi */}
                       <div className="flex items-start gap-3">
                         <Calendar className="w-4 h-4 text-blue-500 mt-0.5" />
                         <div className="flex-1">
-                          <span className="text-xs text-slate-500 block mb-2">Takip Ayı</span>
-                          <select
+                          <span className="text-xs text-slate-500 block mb-2">Takip Tarihi</span>
+                          <input
+                            type="date"
                             value={localFollowUpMonth}
                             onChange={(e) => handleFollowUpMonthChange(e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg text-sm border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none cursor-pointer"
-                          >
-                            {followUpMonthOptions.map((option) => (
-                              <option key={option.value} value={option.value} className="text-slate-900">
-                                {option.label}
-                              </option>
-                            ))}
-                          </select>
+                            className="w-full px-3 py-2 rounded-lg text-sm border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
+                          />
                         </div>
                       </div>
                     </div>

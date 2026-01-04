@@ -134,10 +134,16 @@ export const updateDemoRequestStatus = async (req: Request, res: Response, next:
       throw new ApiError(400, 'Geçersiz potansiyel durum');
     }
 
-    // Validate followUpMonth if provided
+    // Validate followUpMonth if provided (now a date string YYYY-MM-DD)
     let nextFollowUpMonth: string | undefined;
     if (followUpMonth && typeof followUpMonth === 'string' && followUpMonth.trim()) {
-      nextFollowUpMonth = followUpMonth.trim();
+      // Optionally validate date format
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (dateRegex.test(followUpMonth.trim())) {
+        nextFollowUpMonth = followUpMonth.trim();
+      } else {
+        nextFollowUpMonth = followUpMonth.trim(); // Allow any format for flexibility
+      }
     }
 
     const updateData: any = { potentialStatus: nextStatus as any };
