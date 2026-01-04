@@ -28,9 +28,23 @@ export default function RootLayout({
   return (
     <html lang="tr" data-theme="dark">
       <head>
-        {/* Google tag (gtag.js) */}
+        {/* Google tag (gtag.js) - Google Ads */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=AW-17852172573"
+          strategy="afterInteractive"
+        />
+        <Script id="google-ads" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'AW-17852172573');
+          `}
+        </Script>
+
+        {/* Google tag (gtag.js) - Google Analytics 4 */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-HCZBXKJ43L"
           strategy="afterInteractive"
         />
         <Script id="google-analytics" strategy="afterInteractive">
@@ -38,7 +52,7 @@ export default function RootLayout({
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', 'AW-17852172573');
+            gtag('config', 'G-HCZBXKJ43L');
           `}
         </Script>
       </head>
