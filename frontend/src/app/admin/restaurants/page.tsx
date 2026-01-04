@@ -194,6 +194,8 @@ export default function AdminRestaurants() {
       ownerEmail: restaurant.owner.email,
       ownerName: restaurant.owner.name,
       ownerPassword: '',
+      membershipStartDate: '',
+      membershipEndDate: '',
     });
     setShowModal(true);
   };
