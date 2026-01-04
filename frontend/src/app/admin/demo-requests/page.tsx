@@ -4,14 +4,13 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
-import { MessageCircle, ChevronDown, ChevronUp, Trash2, Calendar, User, Phone, Mail, Store, Table2, Eye } from 'lucide-react';
+import { MessageCircle, ChevronDown, ChevronUp, Trash2, Calendar, User, Phone, Mail, Store, Table2, Eye, FileText } from 'lucide-react';
 import { normalizeTRPhoneToWaDigits, buildDemoWhatsAppMessage } from '@/utils/phone';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Potansiyel Durum için tek kaynak ENUM
 type PotentialStatus = 
-  | 'NONE'
   | 'PENDING'
   | 'DEMO_CREATED'
   | 'HIGH_PROBABILITY'
@@ -35,7 +34,6 @@ interface DemoRequest {
 
 // Potansiyel durum konfigürasyonu - tek kaynak
 const potentialStatusConfig: Record<PotentialStatus, { label: string; color: string; icon: string }> = {
-  NONE: { label: 'Seçiniz', color: 'bg-slate-50 text-slate-500 border-slate-200', icon: '⚪' },
   PENDING: { label: 'Beklemede', color: 'bg-amber-50 text-amber-700 border-amber-200', icon: '⏳' },
   DEMO_CREATED: { label: 'Demo Oluşturuldu', color: 'bg-blue-50 text-blue-700 border-blue-200', icon: '🎉' },
   HIGH_PROBABILITY: { label: 'Yüksek İhtimal', color: 'bg-green-50 text-green-700 border-green-200', icon: '🎯' },
@@ -70,8 +68,9 @@ function DemoRequestRow({ request, onUpdate, onDelete }: {
   onDelete: (id: string) => void;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [localPotentialStatus, setLocalPotentialStatus] = useState<PotentialStatus>(request.potentialStatus || 'NONE');
+  const [localPotentialStatus, setLocalPotentialStatus] = useState<PotentialStatus>(request.potentialStatus || 'PENDING');
   const [localFollowUpMonth, setLocalFollowUpMonth] = useState(request.followUpMonth || '');
+  const [localNotes, setLocalNotes] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
@@ -266,6 +265,17 @@ function DemoRequestRow({ request, onUpdate, onDelete }: {
                         value={localFollowUpMonth}
                         onChange={(e) => handleFollowUpMonthChange(e.target.value)}
                         className="w-full px-3 py-2.5 rounded-lg text-sm border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <span className="text-xs text-slate-500 block mb-2">Notlar</span>
+                      <textarea
+                        value={localNotes}
+                        onChange={(e) => setLocalNotes(e.target.value)}
+                        placeholder="Satış süreci hakkında notlar..."
+                        rows={3}
+                        className="w-full px-3 py-2.5 rounded-lg text-sm border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none resize-none"
                       />
                     </div>
                   </div>
@@ -501,6 +511,20 @@ function DemoRequestRow({ request, onUpdate, onDelete }: {
                             value={localFollowUpMonth}
                             onChange={(e) => handleFollowUpMonthChange(e.target.value)}
                             className="w-full px-3 py-2 rounded-lg text-sm border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3">
+                        <FileText className="w-4 h-4 text-blue-500 mt-0.5" />
+                        <div className="flex-1">
+                          <span className="text-xs text-slate-500 block mb-2">Notlar</span>
+                          <textarea
+                            value={localNotes}
+                            onChange={(e) => setLocalNotes(e.target.value)}
+                            placeholder="Satış süreci hakkında notlar..."
+                            rows={3}
+                            className="w-full px-3 py-2 rounded-lg text-sm border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none resize-none"
                           />
                         </div>
                       </div>
