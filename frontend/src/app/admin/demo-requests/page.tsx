@@ -9,8 +9,16 @@ import { normalizeTRPhoneToWaDigits, buildDemoWhatsAppMessage } from '@/utils/ph
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 
-type DemoRequestStatus = 'PENDING' | 'DEMO_CREATED' | 'FOLLOW_UP' | 'NEGATIVE';
-type DemoRequestPotential = 'HIGH_PROBABILITY' | 'LONG_TERM';
+// Potansiyel Durum için tek kaynak ENUM
+type PotentialStatus = 
+  | 'NONE'
+  | 'PENDING'
+  | 'DEMO_CREATED'
+  | 'HIGH_PROBABILITY'
+  | 'EVALUATING'
+  | 'FOLLOW_UP'
+  | 'LONG_TERM'
+  | 'NEGATIVE';
 
 interface DemoRequest {
   id: string;
@@ -20,25 +28,31 @@ interface DemoRequest {
   email?: string | null;
   restaurantType: string;
   tableCount: number;
-  status: DemoRequestStatus;
-  potential?: DemoRequestPotential | null;
+  potentialStatus: PotentialStatus;
   followUpMonth?: string | null;
-  membershipStartDate?: string | null;
-  membershipEndDate?: string | null;
   createdAt: string;
 }
 
-const statusConfig = {
+// Potansiyel durum konfigürasyonu - tek kaynak
+const potentialStatusConfig: Record<PotentialStatus, { label: string; color: string; icon: string }> = {
+  NONE: { label: 'Seçiniz', color: 'bg-slate-50 text-slate-500 border-slate-200', icon: '⚪' },
   PENDING: { label: 'Beklemede', color: 'bg-amber-50 text-amber-700 border-amber-200', icon: '⏳' },
-  DEMO_CREATED: { label: 'Demo Oluşturuldu', color: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: '🎉' },
-  FOLLOW_UP: { label: 'Takip', color: 'bg-blue-50 text-blue-700 border-blue-200', icon: '✅' },
+  DEMO_CREATED: { label: 'Demo Oluşturuldu', color: 'bg-blue-50 text-blue-700 border-blue-200', icon: '🎉' },
+  HIGH_PROBABILITY: { label: 'Yüksek İhtimal', color: 'bg-green-50 text-green-700 border-green-200', icon: '🎯' },
+  EVALUATING: { label: 'Değerlendiriyor', color: 'bg-orange-50 text-orange-700 border-orange-200', icon: '🤔' },
+  FOLLOW_UP: { label: 'Takip', color: 'bg-purple-50 text-purple-700 border-purple-200', icon: '📞' },
+  LONG_TERM: { label: 'Uzun Vade', color: 'bg-slate-50 text-slate-600 border-slate-300', icon: '📅' },
   NEGATIVE: { label: 'Olumsuz', color: 'bg-rose-50 text-rose-700 border-rose-200', icon: '❌' },
 };
 
-const potentialConfig = {
-  HIGH_PROBABILITY: { label: 'Yüksek İhtimal', color: 'bg-green-50 text-green-700 border-green-200', icon: '🎯' },
-  LONG_TERM: { label: 'Uzun Vade', color: 'bg-purple-50 text-purple-700 border-purple-200', icon: '📅' },
-};
+// Takip ayı seçenekleri
+const followUpMonthOptions = [
+  { value: '', label: 'Seçiniz' },
+  { value: 'THIS_MONTH', label: 'Bu Ay' },
+  { value: 'NEXT_MONTH', label: 'Önümüzdeki Ay' },
+  { value: '2_MONTHS', label: '2 Ay Sonra' },
+  { value: 'LONG_TERM', label: 'Uzun Vade' },
+];
 
 // WhatsApp ile iletişime geç - AYNEN KORUNDU
 const openWhatsApp = (phone: string, fullName: string, restaurantName: string) => {
@@ -65,11 +79,8 @@ function DemoRequestRow({ request, onUpdate, onDelete }: {
   onDelete: (id: string) => void;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [localStatus, setLocalStatus] = useState(request.status);
-  const [localPotential, setLocalPotential] = useState<DemoRequestPotential | null>(request.potential || null);
-  const [followUpDate, setFollowUpDate] = useState(request.followUpMonth || '');
-  const [membershipStart, setMembershipStart] = useState(request.membershipStartDate || '');
-  const [membershipEnd, setMembershipEnd] = useState(request.membershipEndDate || '');
+  const [localPotentialStatus, setLocalPotentialStatus] = useState<PotentialStatus>(request.potentialStatus || 'NONE');
+  const [localFollowUpMonth, setLocalFollowUpMonth] = useState(request.followUpMonth || '');
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
@@ -77,15 +88,17 @@ function DemoRequestRow({ request, onUpdate, onDelete }: {
     
     try {
       await apiClient.updateDemoRequestStatus(request.id, {
-        status: localStatus,
-        potential: localPotential || undefined,
-        followUpMonth: followUpDate || null,
-        membershipStartDate: membershipStart || null,
-        membershipEndDate: membershipEnd || null
+        potentialStatus: localPotentialStatus,
+        followUpMonth: localFollowUpMonth || null,
       });
       
-      toast.success('Bilgiler kaydedildi', { duration: 2000 });
-      setIsExpanded(false); // Detay panelini kapat
+      onUpdate(request.id, {
+        potentialStatus: localPotentialStatus,
+        followUpMonth: localFollowUpMonth || null,
+      });
+      
+      toast.success('Durum güncellendi', { duration: 2000 });
+      setIsExpanded(false);
     } catch (error) {
       toast.error('Kaydetme başarısız', { duration: 2000 });
     } finally {
@@ -93,61 +106,39 @@ function DemoRequestRow({ request, onUpdate, onDelete }: {
     }
   };
 
-  const handleStatusChange = async (newStatus: DemoRequestStatus) => {
-    setLocalStatus(newStatus);
+  const handlePotentialStatusChange = async (newStatus: PotentialStatus) => {
+    setLocalPotentialStatus(newStatus);
     
-    // Durum değiştir
     try {
       await apiClient.updateDemoRequestStatus(request.id, {
-        status: newStatus,
-        potential: localPotential || undefined,
-        followUpMonth: followUpDate || null
+        potentialStatus: newStatus,
+        followUpMonth: localFollowUpMonth || null,
       });
-      onUpdate(request.id, { status: newStatus });
+      onUpdate(request.id, { potentialStatus: newStatus });
       toast.success('Durum güncellendi', { duration: 2000 });
     } catch (error) {
       toast.error('Durum güncellenemedi', { duration: 2000 });
-      setLocalStatus(request.status); // Geri al
+      setLocalPotentialStatus(request.potentialStatus);
     }
   };
 
-  const handlePotentialChange = async (newPotential: DemoRequestPotential | '') => {
-    const potentialValue = newPotential === '' ? null : newPotential;
-    setLocalPotential(potentialValue);
+  const handleFollowUpMonthChange = async (newMonth: string) => {
+    setLocalFollowUpMonth(newMonth);
     
     try {
       await apiClient.updateDemoRequestStatus(request.id, {
-        status: localStatus,
-        potential: potentialValue || undefined,
-        followUpMonth: followUpDate || null
+        potentialStatus: localPotentialStatus,
+        followUpMonth: newMonth || null,
       });
-      onUpdate(request.id, { potential: potentialValue });
-      toast.success('Potansiyel güncellendi', { duration: 2000 });
+      onUpdate(request.id, { followUpMonth: newMonth });
+      toast.success('Takip ayı güncellendi', { duration: 2000 });
     } catch (error) {
-      toast.error('Potansiyel güncellenemedi', { duration: 2000 });
-      setLocalPotential(request.potential || null);
+      toast.error('Takip ayı güncellenemedi', { duration: 2000 });
+      setLocalFollowUpMonth(request.followUpMonth || '');
     }
   };
 
-  const handleFollowUpDateChange = async (newDate: string) => {
-    setFollowUpDate(newDate);
-    
-    try {
-      await apiClient.updateDemoRequestStatus(request.id, {
-        status: localStatus,
-        potential: localPotential || undefined,
-        followUpMonth: newDate || null
-      });
-      onUpdate(request.id, { followUpMonth: newDate });
-      toast.success('Takip tarihi güncellendi', { duration: 2000 });
-    } catch (error) {
-      toast.error('Tarih güncellenemedi', { duration: 2000 });
-      setFollowUpDate(request.followUpMonth || '');
-    }
-  };
-
-  const statusCfg = statusConfig[localStatus];
-  const isLongTerm = localPotential === 'LONG_TERM';
+  const statusCfg = potentialStatusConfig[localPotentialStatus];
 
   return (
     <>
@@ -164,14 +155,15 @@ function DemoRequestRow({ request, onUpdate, onDelete }: {
               </p>
             </div>
             <select
-              value={localStatus}
-              onChange={(e) => handleStatusChange(e.target.value as DemoRequestStatus)}
+              value={localPotentialStatus}
+              onChange={(e) => handlePotentialStatusChange(e.target.value as PotentialStatus)}
               className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold border cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 flex-shrink-0 ${statusCfg.color}`}
             >
-              <option value="PENDING" className="bg-white text-slate-900">{statusConfig.PENDING.icon}</option>
-              <option value="DEMO_CREATED" className="bg-white text-slate-900">{statusConfig.DEMO_CREATED.icon}</option>
-              <option value="FOLLOW_UP" className="bg-white text-slate-900">{statusConfig.FOLLOW_UP.icon}</option>
-              <option value="NEGATIVE" className="bg-white text-slate-900">{statusConfig.NEGATIVE.icon}</option>
+              {Object.entries(potentialStatusConfig).map(([key, config]) => (
+                <option key={key} value={key} className="bg-white text-slate-900">
+                  {config.icon} {config.label}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -253,65 +245,43 @@ function DemoRequestRow({ request, onUpdate, onDelete }: {
                   </div>
                 </div>
 
-                {/* Üyelik & Süreç */}
+                {/* Satış Takibi */}
                 <div className="space-y-3 bg-white p-4 rounded-xl border border-slate-200">
                   <h4 className="font-bold text-slate-900 text-sm flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-blue-500" />
-                    Üyelik & Süreç
+                    Satış Takibi
                   </h4>
                   
                   <div className="space-y-3">
                     <div>
-                      <span className="text-xs text-slate-500 block mb-2">Üyelik Başlangıç</span>
-                      <input
-                        type="date"
-                        value={membershipStart}
-                        onChange={(e) => setMembershipStart(e.target.value)}
-                        className="w-full px-3 py-2.5 rounded-lg text-sm border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
-                      />
-                    </div>
-                    
-                    <div>
-                      <span className="text-xs text-slate-500 block mb-2">Üyelik Bitiş</span>
-                      <input
-                        type="date"
-                        value={membershipEnd}
-                        onChange={(e) => setMembershipEnd(e.target.value)}
-                        className="w-full px-3 py-2.5 rounded-lg text-sm border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
-                      />
-                    </div>
-                    
-                    <div>
-                      <span className="text-xs text-slate-500 block mb-2">Potansiyel</span>
+                      <span className="text-xs text-slate-500 block mb-2">Potansiyel Durum</span>
                       <select
-                        value={localPotential || ''}
-                        onChange={(e) => handlePotentialChange(e.target.value as DemoRequestPotential | '')}
+                        value={localPotentialStatus}
+                        onChange={(e) => handlePotentialStatusChange(e.target.value as PotentialStatus)}
                         className="w-full px-3 py-2.5 rounded-lg text-sm border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none cursor-pointer"
                       >
-                        <option value="" className="text-slate-900">Seçiniz</option>
-                        <option value="HIGH_PROBABILITY" className="text-slate-900">🎯 Yüksek İhtimal</option>
-                        <option value="LONG_TERM" className="text-slate-900">📅 Uzun Vade</option>
+                        {Object.entries(potentialStatusConfig).map(([key, config]) => (
+                          <option key={key} value={key} className="text-slate-900">
+                            {config.icon} {config.label}
+                          </option>
+                        ))}
                       </select>
                     </div>
                     
-                    <AnimatePresence>
-                      {isLongTerm && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <span className="text-xs text-slate-500 block mb-2">Hedef Tarih</span>
-                          <input
-                            type="month"
-                            value={followUpDate}
-                            onChange={(e) => handleFollowUpDateChange(e.target.value)}
-                            className="w-full px-3 py-2.5 rounded-lg text-sm border border-purple-200 bg-purple-50/30 text-slate-900 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 focus:outline-none"
-                          />
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                    <div>
+                      <span className="text-xs text-slate-500 block mb-2">Takip Ayı</span>
+                      <select
+                        value={localFollowUpMonth}
+                        onChange={(e) => handleFollowUpMonthChange(e.target.value)}
+                        className="w-full px-3 py-2.5 rounded-lg text-sm border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none cursor-pointer"
+                      >
+                        {followUpMonthOptions.map((option) => (
+                          <option key={option.value} value={option.value} className="text-slate-900">
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 </div>
 
@@ -396,14 +366,15 @@ function DemoRequestRow({ request, onUpdate, onDelete }: {
         {/* Durum Dropdown */}
         <td className="px-4 py-4">
           <select
-            value={localStatus}
-            onChange={(e) => handleStatusChange(e.target.value as DemoRequestStatus)}
+            value={localPotentialStatus}
+            onChange={(e) => handlePotentialStatusChange(e.target.value as PotentialStatus)}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold border cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 ${statusCfg.color}`}
           >
-            <option value="PENDING" className="bg-white text-slate-900">{statusConfig.PENDING.icon} {statusConfig.PENDING.label}</option>
-            <option value="DEMO_CREATED" className="bg-white text-slate-900">{statusConfig.DEMO_CREATED.icon} {statusConfig.DEMO_CREATED.label}</option>
-            <option value="FOLLOW_UP" className="bg-white text-slate-900">{statusConfig.FOLLOW_UP.icon} {statusConfig.FOLLOW_UP.label}</option>
-            <option value="NEGATIVE" className="bg-white text-slate-900">{statusConfig.NEGATIVE.icon} {statusConfig.NEGATIVE.label}</option>
+            {Object.entries(potentialStatusConfig).map(([key, config]) => (
+              <option key={key} value={key} className="bg-white text-slate-900">
+                {config.icon} {config.label}
+              </option>
+            ))}
           </select>
         </td>
 
@@ -507,90 +478,51 @@ function DemoRequestRow({ request, onUpdate, onDelete }: {
                     </div>
                   </div>
 
-                  {/* Sağ Kolon - Üyelik & Süreç Bilgileri */}
+                  {/* Sağ Kolon - Satış Takibi */}
                   <div className="space-y-4">
                     <h4 className="font-bold text-slate-900 flex items-center gap-2">
                       <Calendar className="w-5 h-5 text-blue-500" />
-                      Üyelik & Süreç Bilgileri
+                      Satış Takibi
                     </h4>
                     
                     <div className="space-y-3 bg-white p-4 rounded-xl border border-slate-200">
-                      <div className="flex items-start gap-3">
-                        <Calendar className="w-4 h-4 text-slate-400 mt-0.5" />
-                        <div className="flex-1">
-                          <span className="text-xs text-slate-500 block mb-2">Üyelik Başlangıç Tarihi</span>
-                          <input
-                            type="date"
-                            value={membershipStart}
-                            onChange={(e) => setMembershipStart(e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg text-sm border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="flex items-start gap-3">
-                        <Calendar className="w-4 h-4 text-slate-400 mt-0.5" />
-                        <div className="flex-1">
-                          <span className="text-xs text-slate-500 block mb-2">Üyelik Bitiş Tarihi</span>
-                          <input
-                            type="date"
-                            value={membershipEnd}
-                            onChange={(e) => setMembershipEnd(e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg text-sm border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
-                          />
-                        </div>
-                      </div>
-
+                      {/* Potansiyel Durum */}
                       <div className="flex items-start gap-3">
                         <div className="w-4 h-4 text-slate-400 mt-0.5">{statusCfg.icon}</div>
                         <div className="flex-1">
-                          <span className="text-xs text-slate-500 block">Demo Durumu</span>
-                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border mt-1 ${statusCfg.color}`}>
-                            {statusCfg.label}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Potansiyel Seçimi */}
-                      <div className="flex items-start gap-3">
-                        <div className="w-4 h-4 text-slate-400 mt-0.5">🎯</div>
-                        <div className="flex-1">
-                          <span className="text-xs text-slate-500 block mb-2">Potansiyel</span>
+                          <span className="text-xs text-slate-500 block mb-2">Potansiyel Durum</span>
                           <select
-                            value={localPotential || ''}
-                            onChange={(e) => handlePotentialChange(e.target.value as DemoRequestPotential | '')}
+                            value={localPotentialStatus}
+                            onChange={(e) => handlePotentialStatusChange(e.target.value as PotentialStatus)}
                             className="w-full px-3 py-2 rounded-lg text-sm border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none cursor-pointer"
                           >
-                            <option value="" className="text-slate-900">Seçiniz</option>
-                            <option value="HIGH_PROBABILITY" className="text-slate-900">🎯 Yüksek İhtimal</option>
-                            <option value="LONG_TERM" className="text-slate-900">📅 Uzun Vade</option>
+                            {Object.entries(potentialStatusConfig).map(([key, config]) => (
+                              <option key={key} value={key} className="text-slate-900">
+                                {config.icon} {config.label}
+                              </option>
+                            ))}
                           </select>
                         </div>
                       </div>
 
-                      {/* Uzun Vade Tarih Seçici */}
-                      <AnimatePresence>
-                        {isLongTerm && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="flex items-start gap-3"
+                      {/* Takip Ayı */}
+                      <div className="flex items-start gap-3">
+                        <Calendar className="w-4 h-4 text-blue-500 mt-0.5" />
+                        <div className="flex-1">
+                          <span className="text-xs text-slate-500 block mb-2">Takip Ayı</span>
+                          <select
+                            value={localFollowUpMonth}
+                            onChange={(e) => handleFollowUpMonthChange(e.target.value)}
+                            className="w-full px-3 py-2 rounded-lg text-sm border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none cursor-pointer"
                           >
-                            <Calendar className="w-4 h-4 text-purple-500 mt-0.5" />
-                            <div className="flex-1">
-                              <span className="text-xs text-slate-500 block mb-2">Hedef Tarih (Ay/Yıl)</span>
-                              <input
-                                type="month"
-                                value={followUpDate}
-                                onChange={(e) => handleFollowUpDateChange(e.target.value)}
-                                className="w-full px-3 py-2 rounded-lg text-sm border border-purple-200 bg-purple-50/30 text-slate-900 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 focus:outline-none"
-                              />
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                            {followUpMonthOptions.map((option) => (
+                              <option key={option.value} value={option.value} className="text-slate-900">
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
                     </div>
 
                     {/* Kaydet Butonu */}
@@ -640,7 +572,7 @@ function DemoRequestsTable() {
   const [requests, setRequests] = useState<DemoRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<DemoRequestStatus | 'ALL'>('ALL');
+  const [potentialFilter, setPotentialFilter] = useState<PotentialStatus | 'ALL'>('ALL');
 
   useEffect(() => {
     fetchRequests();
@@ -689,12 +621,12 @@ function DemoRequestsTable() {
       req.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       req.phone.includes(searchTerm);
     
-    const matchesStatus = statusFilter === 'ALL' || req.status === statusFilter;
+    const matchesPotential = potentialFilter === 'ALL' || req.potentialStatus === potentialFilter;
 
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesPotential;
   }) : [];
 
-  const pendingCount = Array.isArray(requests) ? requests.filter(r => r.status === 'PENDING').length : 0;
+  const pendingCount = Array.isArray(requests) ? requests.filter(r => r.potentialStatus === 'PENDING').length : 0;
 
   return (
     <ProtectedRoute>
@@ -730,15 +662,18 @@ function DemoRequestsTable() {
             />
             
             <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as DemoRequestStatus | 'ALL')}
+              value={potentialFilter}
+              onChange={(e) => setPotentialFilter(e.target.value as PotentialStatus | 'ALL')}
               className="w-full px-3 sm:px-4 py-2.5 rounded-lg border border-slate-200 bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm sm:text-base"
             >
               <option value="ALL">Tüm Durumlar</option>
-              <option value="PENDING">⏳ Beklemede</option>
-              <option value="DEMO_CREATED">🎉 Demo Oluşturuldu</option>
-              <option value="FOLLOW_UP">✅ Takip</option>
-              <option value="NEGATIVE">❌ Olumsuz</option>
+              {Object.entries(potentialStatusConfig)
+                .filter(([key]) => key !== 'NONE')
+                .map(([key, config]) => (
+                  <option key={key} value={key}>
+                    {config.icon} {config.label}
+                  </option>
+                ))}
             </select>
           </div>
 

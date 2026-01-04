@@ -3,13 +3,19 @@ import prisma from '../config/prisma';
 import { ApiError } from '../utils/response';
 import { DemoRequestStatus } from '@prisma/client';
 
-// Define potential enum values as constants
-const DemoRequestPotential = {
+// Potansiyel Durum ENUM - tek kaynak
+const PotentialStatus = {
+  NONE: 'NONE',
+  PENDING: 'PENDING',
+  DEMO_CREATED: 'DEMO_CREATED',
   HIGH_PROBABILITY: 'HIGH_PROBABILITY',
-  LONG_TERM: 'LONG_TERM'
+  EVALUATING: 'EVALUATING',
+  FOLLOW_UP: 'FOLLOW_UP',
+  LONG_TERM: 'LONG_TERM',
+  NEGATIVE: 'NEGATIVE'
 } as const;
 
-type DemoRequestPotentialType = typeof DemoRequestPotential[keyof typeof DemoRequestPotential];
+type PotentialStatusType = typeof PotentialStatus[keyof typeof PotentialStatus];
 
 const normalizeWhatsappPhone = (raw: unknown) => {
   if (typeof raw !== 'string') return '';
@@ -78,6 +84,7 @@ export const createDemoRequest = async (req: Request, res: Response, next: NextF
         restaurantType: String(restaurantType ?? '').trim(),
         tableCount: Math.trunc(parsedTableCount),
         status: DemoRequestStatus.PENDING,
+        potentialStatus: PotentialStatus.PENDING as any,
       },
     });
 
@@ -109,77 +116,34 @@ export const listDemoRequests = async (req: Request, res: Response, next: NextFu
 export const updateDemoRequestStatus = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const { status, potential, followUpMonth, membershipStartDate, membershipEndDate } = req.body ?? {};
+    const { potentialStatus, followUpMonth } = req.body ?? {};
 
     if (!id) {
       throw new ApiError(400, 'ID gerekli');
     }
 
-    if (!status || typeof status !== 'string') {
-      throw new ApiError(400, 'Durum gerekli');
+    if (!potentialStatus || typeof potentialStatus !== 'string') {
+      throw new ApiError(400, 'Potansiyel durum gerekli');
     }
 
-    const allowed = [
-      'PENDING',
-      'DEMO_CREATED',
-      'FOLLOW_UP',
-      'NEGATIVE',
-    ];
-
-    const nextStatus = status as DemoRequestStatus;
-    if (!allowed.includes(nextStatus)) {
-      throw new ApiError(400, 'Geçersiz durum');
+    // Validate potentialStatus
+    const allowedStatuses = Object.values(PotentialStatus);
+    const nextStatus = potentialStatus as PotentialStatusType;
+    
+    if (!allowedStatuses.includes(nextStatus)) {
+      throw new ApiError(400, 'Geçersiz potansiyel durum');
     }
 
-    // Validate potential if provided
-    const potentialOptions = [
-      DemoRequestPotential.HIGH_PROBABILITY,
-      DemoRequestPotential.LONG_TERM,
-    ];
-
-    let nextPotential: DemoRequestPotentialType | undefined;
-    if (potential && typeof potential === 'string') {
-      nextPotential = potential as DemoRequestPotentialType;
-      if (!potentialOptions.includes(nextPotential)) {
-        throw new ApiError(400, 'Geçersiz potansiyel durumu');
-      }
-    }
-
-    // Validate followUpMonth format (YYYY-MM)
+    // Validate followUpMonth if provided
     let nextFollowUpMonth: string | undefined;
-    if (followUpMonth && typeof followUpMonth === 'string') {
-      const monthRegex = /^\d{4}-(0[1-9]|1[0-2])$/;
-      if (!monthRegex.test(followUpMonth)) {
-        throw new ApiError(400, 'Takip ayı YYYY-MM formatında olmalı');
-      }
-      nextFollowUpMonth = followUpMonth;
+    if (followUpMonth && typeof followUpMonth === 'string' && followUpMonth.trim()) {
+      nextFollowUpMonth = followUpMonth.trim();
     }
 
-    // Validate membership dates format (YYYY-MM-DD)
-    let nextMembershipStartDate: string | undefined;
-    let nextMembershipEndDate: string | undefined;
-    
-    if (membershipStartDate && typeof membershipStartDate === 'string') {
-      const dateRegex = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
-      if (!dateRegex.test(membershipStartDate)) {
-        throw new ApiError(400, 'Üyelik başlangıç tarihi YYYY-MM-DD formatında olmalı');
-      }
-      nextMembershipStartDate = membershipStartDate;
+    const updateData: any = { potentialStatus: nextStatus as any };
+    if (nextFollowUpMonth !== undefined) {
+      updateData.followUpMonth = nextFollowUpMonth;
     }
-    
-    if (membershipEndDate && typeof membershipEndDate === 'string') {
-      const dateRegex = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
-      if (!dateRegex.test(membershipEndDate)) {
-        throw new ApiError(400, 'Üyelik bitiş tarihi YYYY-MM-DD formatında olmalı');
-      }
-      nextMembershipEndDate = membershipEndDate;
-    }
-
-    const updateData: any = { status: nextStatus };
-    if (nextPotential !== undefined) updateData.potential = nextPotential;
-    if (nextFollowUpMonth !== undefined) updateData.followUpMonth = nextFollowUpMonth;
-    if (nextMembershipStartDate !== undefined) updateData.membershipStartDate = nextMembershipStartDate;
-    if (nextMembershipEndDate !== undefined) updateData.membershipEndDate = nextMembershipEndDate;
 
     const updated = await prisma.demoRequest.update({
       where: { id },
@@ -188,7 +152,7 @@ export const updateDemoRequestStatus = async (req: Request, res: Response, next:
 
     return res.json({
       success: true,
-      message: 'Bilgiler güncellendi',
+      message: 'Durum güncellendi',
       data: updated,
     });
   } catch (error) {

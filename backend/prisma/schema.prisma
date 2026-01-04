@@ -1,7 +1,7 @@
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "debian-openssl-3.0.x", "linux-musl-openssl-3.0.x", "rhel-openssl-3.0.x"]
+  provider        = "prisma-client-js"
   previewFeatures = []
+  binaryTargets   = ["native", "debian-openssl-3.0.x", "linux-musl-openssl-3.0.x", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
@@ -11,13 +11,13 @@ datasource db {
 }
 
 model Analytics {
-  id           String      @id @default(uuid())
-  date         DateTime    @default(now())
-  viewCount    Int         @default(1)
+  id           String     @id @default(uuid())
+  date         DateTime   @default(now())
+  viewCount    Int        @default(1)
   restaurantId String
   productId    String?
-  product      Product?    @relation(fields: [productId], references: [id], onDelete: Cascade)
-  restaurant   Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  product      Product?   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@unique([restaurantId, date])
   @@unique([restaurantId, productId, date])
@@ -27,16 +27,16 @@ model Analytics {
 }
 
 model Category {
-  id           String      @id @default(uuid())
+  id           String     @id @default(uuid())
   name         String
   description  String?
   image        String?
-  order        Int         @default(0)
-  isActive     Boolean     @default(true)
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  order        Int        @default(0)
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
   restaurantId String
-  restaurant   Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   products     Product[]
 
   @@index([order])
@@ -45,22 +45,22 @@ model Category {
 }
 
 model Image {
-  id           String      @id @default(uuid())
+  id           String     @id @default(uuid())
   url          String
   filename     String
   mimetype     String
   size         Int
-  type         ImageType   @default(OTHER)
-  createdAt    DateTime    @default(now())
+  type         ImageType  @default(OTHER)
+  createdAt    DateTime   @default(now())
   restaurantId String
-  restaurant   Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@index([restaurantId])
   @@map("images")
 }
 
 model MenuView {
-  id           String      @id @default(uuid())
+  id           String     @id @default(uuid())
   restaurantId String
   tableId      String?
   userAgent    String?
@@ -68,8 +68,8 @@ model MenuView {
   ip           String?
   referrer     String?
   currentPath  String?
-  createdAt    DateTime    @default(now())
-  restaurant   Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@index([createdAt])
   @@index([restaurantId, createdAt])
@@ -77,12 +77,12 @@ model MenuView {
 }
 
 model ProductView {
-  id           String      @id @default(uuid())
+  id           String     @id @default(uuid())
   productId    String
   restaurantId String
-  createdAt    DateTime    @default(now())
-  product      Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
-  restaurant   Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+  product      Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@index([productId, createdAt])
   @@index([restaurantId, createdAt])
@@ -122,17 +122,17 @@ model Product {
 }
 
 model QRCode {
-  id            String      @id @default(uuid())
-  code          String      @unique
+  id            String     @id @default(uuid())
+  code          String     @unique
   tableNumber   String?
   imageUrl      String?
-  scanCount     Int         @default(0)
-  isActive      Boolean     @default(true)
+  scanCount     Int        @default(0)
+  isActive      Boolean    @default(true)
   lastScannedAt DateTime?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
   restaurantId  String
-  restaurant    Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@index([code])
   @@index([restaurantId])
@@ -140,15 +140,15 @@ model QRCode {
 }
 
 model RestaurantStatDaily {
-  id                String      @id @default(uuid())
+  id                String     @id @default(uuid())
   restaurantId      String
   date              DateTime
-  totalViews        Int         @default(0)
-  totalProductViews Int         @default(0)
-  uniqueVisitors    Int         @default(0)
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
-  restaurant        Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  totalViews        Int        @default(0)
+  totalProductViews Int        @default(0)
+  uniqueVisitors    Int        @default(0)
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  restaurant        Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@unique([restaurantId, date])
   @@index([restaurantId, date])
@@ -156,33 +156,32 @@ model RestaurantStatDaily {
 }
 
 model Restaurant {
-  id                   String                @id @default(uuid())
-  name                 String
-  slug                 String                @unique
-  description          String?
-  address              String?
-  phone                String?
-  email                String?
-  logo                 String?
-  headerImage          String?
-  instagramUrl         String?
-  facebookUrl          String?
-  workingHours         String?
-  themeColor           String?               @default("#3B82F6")
-  themeSettings        String?
-  isActive             Boolean               @default(true)
-  createdAt            DateTime              @default(now())
-  updatedAt            DateTime              @updatedAt
-  ownerId              String
-  analytics            Analytics[]
-  analyticsEvents      AnalyticsEvent[]
-  categories           Category[]
-  images               Image[]
-  menuViews            MenuView[]
-  productViews         ProductView[]
-  qrCodes              QRCode[]
-  restaurantStatDaily  RestaurantStatDaily[]
-  owner                User                  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  id                  String                @id @default(uuid())
+  name                String
+  slug                String                @unique
+  description         String?
+  address             String?
+  phone               String?
+  email               String?
+  logo                String?
+  headerImage         String?
+  instagramUrl        String?
+  facebookUrl         String?
+  workingHours        String?
+  themeColor          String?               @default("#3B82F6")
+  themeSettings       String?
+  isActive            Boolean               @default(true)
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  ownerId             String
+  analytics           Analytics[]
+  categories          Category[]
+  images              Image[]
+  menuViews           MenuView[]
+  productViews        ProductView[]
+  qrCodes             QRCode[]
+  restaurantStatDaily RestaurantStatDaily[]
+  owner               User                  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
   @@index([ownerId])
   @@index([slug])
@@ -204,23 +203,25 @@ model User {
 }
 
 model DemoRequest {
-  id                 String                   @id @default(cuid())
-  fullName           String
-  restaurantName     String
-  phone              String
-  email              String?
-  restaurantType     String
-  tableCount         Int
-  status             DemoRequestStatus        @default(PENDING)
-  potential          DemoRequestPotential?
-  followUpMonth      String?                  // YYYY-MM format
-  membershipStartDate String?                 // YYYY-MM-DD format
-  membershipEndDate   String?                 // YYYY-MM-DD format
-  createdAt          DateTime                 @default(now())
+  id                  String                @id @default(cuid())
+  fullName            String
+  restaurantName      String
+  phone               String
+  email               String?
+  restaurantType      String
+  tableCount          Int
+  status              DemoRequestStatus     @default(PENDING)
+  potential           DemoRequestPotential?
+  potentialStatus     PotentialStatus?      // Yeni kolon
+  followUpMonth       String?
+  membershipStartDate String?
+  membershipEndDate   String?
+  createdAt           DateTime              @default(now())
 
   @@index([status])
-  @@index([createdAt])
   @@index([potential])
+  @@index([potentialStatus])
+  @@index([createdAt])
   @@map("demo_requests")
 }
 
@@ -238,62 +239,24 @@ enum UserRole {
 }
 
 enum DemoRequestStatus {
-  PENDING           // Beklemede
-  DEMO_CREATED      // Demo Oluşturuldu
-  FOLLOW_UP         // Takip
-  NEGATIVE          // Olumsuz
+  PENDING
+  DEMO_CREATED
+  FOLLOW_UP
+  NEGATIVE
 }
 
 enum DemoRequestPotential {
-  HIGH_PROBABILITY  // Yüksek İhtimal
-  LONG_TERM         // Uzun Vade
+  HIGH_PROBABILITY
+  LONG_TERM
 }
 
-enum AnalyticsEventType {
-  QR_SCAN
-  MENU_VIEW
-  CATEGORY_VIEW
-  PRODUCT_VIEW
-  SEARCH
-  CONTACT_CLICK
-  DIRECTION_CLICK
-}
-
-enum AnalyticsSource {
-  QR
-  DIRECT
-  SOCIAL
-  OTHER
-}
-
-enum DeviceType {
-  MOBILE
-  DESKTOP
-  TABLET
-}
-
-model AnalyticsEvent {
-  id           String              @id @default(uuid())
-  createdAt    DateTime            @default(now())
-  restaurantId String
-  sessionId    String?
-  visitorId    String?
-  eventType    AnalyticsEventType
-  pagePath     String?
-  categoryId   String?
-  productId    String?
-  tableNo      String?
-  source       AnalyticsSource?
-  deviceType   DeviceType
-  referrer     String?
-  userAgent    String?
-  ip           String?
-  restaurant   Restaurant          @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-
-  @@index([restaurantId, createdAt])
-  @@index([createdAt])
-  @@index([sessionId])
-  @@index([visitorId])
-  @@index([eventType])
-  @@map("analytics_events")
+enum PotentialStatus {
+  NONE
+  PENDING
+  DEMO_CREATED
+  HIGH_PROBABILITY
+  EVALUATING
+  FOLLOW_UP
+  LONG_TERM
+  NEGATIVE
 }
