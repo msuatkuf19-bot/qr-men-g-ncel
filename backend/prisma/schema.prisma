@@ -157,19 +157,27 @@ model RestaurantStatDaily {
 
 model Restaurant {
   id                  String                @id @default(uuid())
+  memberNo            String?               @unique
+  businessType        String?               @default("Restoran")
   name                String
   slug                String                @unique
   description         String?
   address             String?
+  city                String?
+  district            String?
+  neighborhood        String?
+  fullAddress         String?
   phone               String?
   email               String?
   logo                String?
   headerImage         String?
   instagramUrl        String?
   facebookUrl         String?
+  googleMapsUrl       String?
   workingHours        String?
   themeColor          String?               @default("#3B82F6")
   themeSettings       String?
+  internalNote        String?
   isActive            Boolean               @default(true)
   membershipStartDate DateTime?
   membershipEndDate   DateTime?
@@ -187,6 +195,7 @@ model Restaurant {
 
   @@index([ownerId])
   @@index([slug])
+  @@index([memberNo])
   @@index([membershipEndDate])
   @@map("restaurants")
 }

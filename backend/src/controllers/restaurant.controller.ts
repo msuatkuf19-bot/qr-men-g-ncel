@@ -92,18 +92,29 @@ export const createRestaurant = async (
 ) => {
   try {
     const {
+      businessType,
+      memberNo,
       name,
       slug,
       description,
       address,
+      city,
+      district,
+      neighborhood,
+      fullAddress,
       phone,
       email,
+      googleMapsUrl,
+      workingHours,
+      instagramUrl,
+      facebookUrl,
+      membershipStartDate,
+      membershipEndDate,
+      internalNote,
       ownerEmail,
       ownerName,
       ownerPassword,
       themeColor,
-      membershipStartDate,
-      membershipEndDate,
     } = req.body;
 
     // Üyelik tarihleri validasyonu
@@ -129,6 +140,32 @@ export const createRestaurant = async (
 
     if (existingRestaurant) {
       throw new ApiError(400, 'Bu slug zaten kullanılıyor');
+    }
+
+    // Üye numarası üret veya kontrol et
+    let finalMemberNo = memberNo;
+    if (!finalMemberNo) {
+      // 6 haneli rastgele üye numarası üret
+      let attempts = 0;
+      while (attempts < 10) {
+        finalMemberNo = String(Math.floor(100000 + Math.random() * 900000));
+        const existing = await prisma.restaurant.findUnique({
+          where: { memberNo: finalMemberNo },
+        });
+        if (!existing) break;
+        attempts++;
+      }
+      if (attempts >= 10) {
+        throw new ApiError(500, 'Üye numarası oluşturulamadı');
+      }
+    } else {
+      // Verilen üye numarası zaten kullanılıyor mu kontrol et
+      const existing = await prisma.restaurant.findUnique({
+        where: { memberNo: finalMemberNo },
+      });
+      if (existing) {
+        throw new ApiError(400, 'Bu üye numarası zaten kullanılıyor');
+      }
     }
 
     // Owner oluştur veya mevcut olanı kullan
@@ -166,15 +203,38 @@ export const createRestaurant = async (
       });
     }
 
+    // workingHours JSON kontrolü
+    let workingHoursStr = null;
+    if (workingHours) {
+      if (typeof workingHours === 'string') {
+        workingHoursStr = workingHours;
+      } else if (Array.isArray(workingHours)) {
+        workingHoursStr = JSON.stringify(workingHours);
+      } else if (typeof workingHours === 'object') {
+        workingHoursStr = JSON.stringify(workingHours);
+      }
+    }
+
     // Restoran oluştur
     const restaurant = await prisma.restaurant.create({
       data: {
+        businessType: businessType || 'Restoran',
+        memberNo: finalMemberNo,
         name,
         slug,
         description,
-        address,
+        address: address || fullAddress, // backward compatibility
+        city,
+        district,
+        neighborhood,
+        fullAddress,
         phone,
         email,
+        googleMapsUrl,
+        workingHours: workingHoursStr,
+        instagramUrl,
+        facebookUrl,
+        internalNote,
         themeColor,
         membershipStartDate: startDate,
         membershipEndDate: endDate,
@@ -228,14 +288,35 @@ export const updateRestaurant = async (
 ) => {
   try {
     const { id } = req.params;
-    const { name, description, address, phone, email, logo, workingHours, themeColor, themeSettings, headerImage, instagramUrl, facebookUrl, slug } = req.body;
+    const { 
+      businessType,
+      name, 
+      description, 
+      address, 
+      city,
+      district,
+      neighborhood,
+      fullAddress,
+      phone, 
+      email, 
+      logo, 
+      workingHours, 
+      themeColor, 
+      themeSettings, 
+      headerImage, 
+      instagramUrl, 
+      facebookUrl, 
+      googleMapsUrl,
+      internalNote,
+      slug 
+    } = req.body;
 
     console.log('Update restaurant request:', { 
       id, 
       userId: req.user?.userId, 
       role: req.user?.role, 
       hasThemeSettings: !!themeSettings,
-      workingHours: workingHours ? workingHours.substring(0, 50) + '...' : 'empty',
+      workingHours: workingHours ? (typeof workingHours === 'string' ? workingHours.substring(0, 50) + '...' : 'object') : 'empty',
       slug
     });
 
@@ -265,22 +346,41 @@ export const updateRestaurant = async (
       ? (typeof themeSettings === 'string' ? themeSettings : JSON.stringify(themeSettings))
       : undefined;
 
+    // workingHours JSON kontrolü
+    let workingHoursStr = undefined;
+    if (workingHours !== undefined) {
+      if (typeof workingHours === 'string') {
+        workingHoursStr = workingHours;
+      } else if (Array.isArray(workingHours)) {
+        workingHoursStr = JSON.stringify(workingHours);
+      } else if (typeof workingHours === 'object') {
+        workingHoursStr = JSON.stringify(workingHours);
+      }
+    }
+
     console.log('Theme settings to save:', themeSettingsString ? themeSettingsString.substring(0, 100) + '...' : 'null');
 
     const updatedRestaurant = await prisma.restaurant.update({
       where: { id },
       data: {
+        ...(businessType !== undefined && { businessType }),
         name,
         description,
-        address,
+        address: address || fullAddress, // backward compatibility
+        ...(city !== undefined && { city }),
+        ...(district !== undefined && { district }),
+        ...(neighborhood !== undefined && { neighborhood }),
+        ...(fullAddress !== undefined && { fullAddress }),
         phone,
         email,
         logo,
         headerImage,
         instagramUrl,
         facebookUrl,
+        ...(googleMapsUrl !== undefined && { googleMapsUrl }),
+        ...(internalNote !== undefined && { internalNote }),
         ...(slug !== undefined && { slug }),
-        ...(workingHours !== undefined && { workingHours }),
+        ...(workingHoursStr !== undefined && { workingHours: workingHoursStr }),
         themeColor,
         ...(themeSettingsString !== undefined && { themeSettings: themeSettingsString }),
       },
