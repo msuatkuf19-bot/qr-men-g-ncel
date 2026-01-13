@@ -7,6 +7,7 @@ import { buildTheme, getCardRadiusClass, getHeaderBackgroundStyle } from '@/lib/
 import { getTodayWorkingHours, isRestaurantOpen } from '@/lib/working-hours-utils';
 import { DEFAULT_PRODUCT_IMAGE } from '@/lib/constants';
 import RestaurantLogo from '@/components/RestaurantLogo';
+import MembershipExpired from '@/components/customer/MembershipExpired';
 
 interface Product {
   id: string;
@@ -57,6 +58,8 @@ export default function PublicMenu() {
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [membershipExpired, setMembershipExpired] = useState(false);
+  const [membershipData, setMembershipData] = useState<any>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showWelcome, setShowWelcome] = useState(true);
 
@@ -138,8 +141,11 @@ export default function PublicMenu() {
         // Analytics hatası sessizce geçilir
       }
     } catch (error: any) {
-      // Production'da error boundary ile yönetilir
-      if (process.env.NODE_ENV === 'development') {
+      // Check if membership expired
+      if (error?.response?.data?.error === 'MEMBERSHIP_EXPIRED') {
+        setMembershipExpired(true);
+        setMembershipData(error.response.data.data);
+      } else if (process.env.NODE_ENV === 'development') {
         console.error('Menü yüklenemedi:', error);
       }
     } finally {
@@ -155,6 +161,16 @@ export default function PublicMenu() {
           <p className="text-gray-600">Menü yükleniyor...</p>
         </div>
       </div>
+    );
+  }
+
+  // Show membership expired screen
+  if (membershipExpired && membershipData) {
+    return (
+      <MembershipExpired
+        restaurantName={membershipData.restaurantName}
+        membershipEndDate={membershipData.membershipEndDate}
+      />
     );
   }
 

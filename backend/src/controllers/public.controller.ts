@@ -100,12 +100,40 @@ export const getPublicMenu = async (
         facebookUrl: true,
         themeColor: true,
         themeSettings: true,
+        membershipStatus: true,
+        membershipEndDate: true,
+        membershipStartDate: true,
       },
     });
     timing.breakdown.restaurantQuery = Date.now() - restaurantQueryStart;
 
     if (!restaurant) {
       throw new ApiError(404, 'Restoran bulunamadı');
+    }
+
+    // Membership kontrolü - Üyelik durumunu ve tarihini kontrol et
+    const now = new Date();
+    const membershipExpired = restaurant.membershipEndDate && now > restaurant.membershipEndDate;
+    const membershipNotStarted = restaurant.membershipStartDate && now < restaurant.membershipStartDate;
+    
+    if (membershipExpired || membershipNotStarted || restaurant.membershipStatus === 'EXPIRED' || restaurant.membershipStatus === 'SUSPENDED') {
+      // Üyelik süresi dolmuş veya askıya alınmış
+      timing.t2_queryEnd = Date.now();
+      timing.t3_responseSent = Date.now();
+      logTiming(timing, slug);
+      
+      return res.status(403).json({
+        success: false,
+        error: 'MEMBERSHIP_EXPIRED',
+        message: 'Bu restoranın üyelik süresi dolmuş',
+        data: {
+          restaurantName: restaurant.name,
+          membershipStatus: restaurant.membershipStatus,
+          membershipEndDate: restaurant.membershipEndDate,
+          expired: membershipExpired,
+          notStarted: membershipNotStarted,
+        },
+      });
     }
 
     let categoriesWithImages: any[];

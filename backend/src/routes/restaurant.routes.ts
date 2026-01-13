@@ -6,6 +6,8 @@ import {
   updateRestaurant,
   deleteRestaurant,
   getMyRestaurant,
+  checkSlugAvailability,
+  generateSlugFromName,
 } from '../controllers/restaurant.controller';
 import { authenticate, authorize } from '../middlewares/auth.middleware';
 import { body } from 'express-validator';
@@ -14,6 +16,10 @@ const router = Router();
 
 // Tüm rotalar authentication gerektirir
 router.use(authenticate);
+
+// Slug utilities
+router.get('/check-slug', authorize('SUPER_ADMIN'), checkSlugAvailability);
+router.post('/generate-slug', authorize('SUPER_ADMIN'), generateSlugFromName);
 
 // Süper Admin - Tüm restoranlar
 router.get('/', authorize('SUPER_ADMIN'), getAllRestaurants);
@@ -30,10 +36,11 @@ router.post(
   authorize('SUPER_ADMIN'),
   [
     body('name').notEmpty().withMessage('Restoran adı gerekli'),
-    body('slug').notEmpty().withMessage('Slug gerekli'),
     body('ownerEmail').isEmail().withMessage('Geçerli bir email girin'),
-    body('ownerName').notEmpty().withMessage('Owner adı gerekli'),
+    body('ownerName').notEmpty().withMessage('Sahip adı gerekli'),
     body('ownerPassword').isLength({ min: 6 }).withMessage('Şifre en az 6 karakter olmalı'),
+    body('membershipStartDate').notEmpty().withMessage('Üyelik başlangıç tarihi gerekli'),
+    body('membershipEndDate').notEmpty().withMessage('Üyelik bitiş tarihi gerekli'),
   ],
   createRestaurant
 );

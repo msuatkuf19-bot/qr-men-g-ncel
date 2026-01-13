@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import prisma from '../config/prisma';
 import { ApiError, sendSuccess } from '../utils/response';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { qrCodeService } from '../services/qr.service';
@@ -161,7 +162,7 @@ export const getQRCodes = async (
   }
 };
 
-// QR kod tarama - Analytics kayıt
+// QR kod tarama - Restaurant slug'a redirect
 export const scanQRCode = async (
   req: Request,
   res: Response,
@@ -169,12 +170,48 @@ export const scanQRCode = async (
 ) => {
   try {
     const { code } = req.params;
-    const ipAddress = req.ip;
-    const userAgent = req.headers['user-agent'];
 
-    const result = await qrCodeService.trackScan(code, ipAddress, userAgent);
+    // QR kodu bul
+    const qrCode = await prisma.qRCode.findUnique({
+      where: { code },
+      include: {
+        restaurant: {
+          select: {
+            slug: true,
+            name: true,
+            isActive: true,
+            membershipStatus: true,
+          },
+        },
+      },
+    });
 
-    sendSuccess(res, result);
+    if (!qrCode) {
+      throw new ApiError(404, 'QR kod bulunamadı');
+    }
+
+    if (!qrCode.isActive) {
+      throw new ApiError(403, 'Bu QR kod devre dışı');
+    }
+
+    if (!qrCode.restaurant.isActive) {
+      throw new ApiError(403, 'Bu restoran şu anda aktif değil');
+    }
+
+    // Scan count'u artır (non-blocking)
+    prisma.qRCode.update({
+      where: { id: qrCode.id },
+      data: {
+        scanCount: { increment: 1 },
+        lastScannedAt: new Date(),
+      },
+    }).catch(err => console.error('QR scan count update failed:', err));
+
+    // Menu URL'ine redirect
+    const frontendUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || 'http://localhost:3000';
+    const menuUrl = `${frontendUrl}/menu/${qrCode.restaurant.slug}`;
+    
+    res.redirect(menuUrl);
   } catch (error) {
     next(error);
   }

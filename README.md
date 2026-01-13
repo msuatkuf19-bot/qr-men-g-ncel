@@ -56,6 +56,13 @@ Restoranların menülerini dijital ortamda kolayca yönetmesini ve müşterileri
 
 ### 👑 Süper Admin Özellikleri
 - ✅ Tüm restoranları görüntüleme ve yönetme
+- ✅ **Yeni Restoran Ekleme (Gelişmiş Kayıt Sistemi)**
+  - Otomatik 6 haneli üye numarası üretimi
+  - Türkçe karakter desteğiyle otomatik slug oluşturma
+  - Sahip hesabı otomatik oluşturma (RESTAURANT_ADMIN rolü)
+  - QR kod otomatik üretimi ve restaurant ile ilişkilendirme
+  - Üyelik başlangıç/bitiş tarihi yönetimi
+  - İşletme tipi seçimi (Restoran/Kafe/Otel/Diğer)
 - ✅ Restoran ekleme/düzenleme/silme
 - ✅ Kullanıcı oluşturma ve yetki verme
 - ✅ Platform geneli raporlar ve istatistikler
@@ -387,6 +394,113 @@ Analytics       # Görüntüleme istatistikleri
 Images          # Görsel yönetimi
 Settings        # Sistem ayarları
 ```
+
+## 🆕 Yeni Özellik: Gelişmiş Restoran Kayıt Sistemi
+
+### Özet
+Super Admin artık gelişmiş bir form ile yeni restoran ekleyebilir. Sistem otomatik olarak:
+- 6 haneli benzersiz üye numarası üretir
+- Restoran slug'ını oluşturur (Türkçe karakter desteği)
+- Sahip hesabı (RESTAURANT_ADMIN) oluşturur
+- QR kod üretir ve ilişkilendirir
+- Üyelik durumunu yönetir
+
+### Kullanım
+
+**1. Yeni Restoran Oluşturma**
+```
+Adım 1: Super Admin olarak giriş yapın
+Adım 2: /admin/restaurants/new sayfasına gidin
+Adım 3: Formu doldurun:
+  - İşletme Bilgileri: İşletme tipi, ad, slug, iletişim bilgileri
+  - Üyelik Bilgileri: Başlangıç ve bitiş tarihleri
+  - Sahip Bilgileri: Ad, email, şifre
+Adım 4: "Restoran Oluştur" butonuna tıklayın
+```
+
+**2. Oluşturma Sonrası**
+- Sistem sizi restaurant detay sayfasına yönlendirir
+- QR kod görselini görebilir ve indirebilirsiniz
+- Menü linkini kopyalayabilirsiniz
+- Sahibe otomatik hoşgeldin emaili gönderilir
+
+**3. QR Kod Kullanımı**
+```
+- QR kod taratıldığında /menu/{slug} sayfasına redirect olur
+- Üyelik süresi dolmuşsa özel uyarı ekranı gösterilir
+- Tarama sayısı otomatik güncellenir
+```
+
+### API Endpoints
+
+**Yeni Endpoints:**
+```
+POST   /api/admin/restaurants           - Restoran + QR + Owner oluştur
+GET    /api/admin/restaurants/check-slug - Slug müsaitlik kontrolü
+POST   /api/admin/restaurants/generate-slug - Slug üretimi
+GET    /api/qr/scan/:code                - QR scan ve redirect
+GET    /api/public/menu/:slug            - Menü (membership check ile)
+```
+
+### Teknik Detaylar
+
+**Backend:**
+- Transaction ile atomik işlem (restaurant + user + qr)
+- Unique constraints: memberNo, slug, email, qr code
+- Automatic slug generation with Turkish character normalization
+- QR code as base64 PNG (400x400)
+- Membership status calculation
+
+**Frontend:**
+- React Hook Form + Zod validation
+- Real-time slug availability check
+- Auto slug generation from name
+- Responsive form design
+- Error handling with toast notifications
+
+### Database Schema Değişiklikleri
+```prisma
+enum BusinessType { RESTORAN, KAFE, OTEL, DIGER }
+enum MembershipStatus { ACTIVE, EXPIRED, SUSPENDED }
+
+Restaurant {
+  businessType: BusinessType
+  membershipStatus: MembershipStatus
+  ...
+}
+
+QRCode {
+  restaurantId: unique // One QR per restaurant
+  imageData: String    // Base64 PNG
+  ...
+}
+```
+
+### Test Senaryosu
+```bash
+# 1. Migration çalıştır
+cd backend
+npm run prisma:migrate
+
+# 2. Backend başlat
+npm run dev
+
+# 3. Frontend başlat (yeni terminal)
+cd ../frontend
+npm run dev
+
+# 4. Super Admin ile giriş yap
+# Email: admin@qrmenu.com
+# Şifre: admin123
+
+# 5. Yeni restoran ekle
+# /admin/restaurants/new
+
+# 6. QR kodu tarat veya menü linkini aç
+# /menu/{slug}
+```
+
+---
 
 ## 📚 API Dokümantasyonu
 
