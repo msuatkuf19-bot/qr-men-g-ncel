@@ -17,7 +17,7 @@ import {
   type CreateRestaurantFormData,
 } from '@/lib/validations/restaurant';
 import { restaurantApi } from '@/lib/api/restaurant';
-import { slugify } from '@/utils/text';
+import { slugifyTR } from '@/utils/slugify';
 
 export default function NewRestaurantPage() {
   const router = useRouter();
@@ -46,7 +46,7 @@ export default function NewRestaurantPage() {
     setValue('name', name);
 
     if (!isSlugManual) {
-      const slug = slugify(name);
+      const slug = slugifyTR(name);
       setValue('slug', slug);
     }
   };
@@ -406,29 +406,4 @@ export default function NewRestaurantPage() {
       </form>
     </div>
   );
-}
-
-/**
- * Slugify helper function
- */
-function slugify(text: string): string {
-  const turkishMap: Record<string, string> = {
-    'ç': 'c', 'Ç': 'C',
-    'ğ': 'g', 'Ğ': 'G',
-    'ı': 'i', 'I': 'I', 'İ': 'I',
-    'ö': 'o', 'Ö': 'O',
-    'ş': 's', 'Ş': 'S',
-    'ü': 'u', 'Ü': 'U',
-  };
-
-  return text
-    .split('')
-    .map(char => turkishMap[char] || char)
-    .join('')
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-+|-+$/g, '');
 }
